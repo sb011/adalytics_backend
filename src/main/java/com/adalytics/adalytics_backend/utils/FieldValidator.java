@@ -1,8 +1,11 @@
 package com.adalytics.adalytics_backend.utils;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class FieldValidator {
     public static boolean isValidEmail(String email) {
-        String emailRegex = "^[\\w!#$%&'*+/=?^`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^`{|}~-]+)*@(?:[A-Z0-9-]+\\.)+[A-Z]{2,6}$";
+        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
         return email != null && email.matches(emailRegex);
     }
 
@@ -11,18 +14,14 @@ public class FieldValidator {
             return false;
         }
 
-        String uppercaseRegex = "[A-Z]";
-        String lowercaseRegex = "[a-z]";
-        String specialCharRegex = "[^\\w\\s]";
-
         if (password.length() < 8) {
             return false;
         }
 
-        boolean hasUppercase = password.matches(uppercaseRegex);
-        boolean hasLowercase = password.matches(lowercaseRegex);
-        boolean hasSpecialChar = password.matches(specialCharRegex);
+        String regExp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$";
+        Pattern pattern = Pattern.compile(regExp);
 
-        return hasUppercase && hasLowercase && hasSpecialChar;
+        Matcher matcher = pattern.matcher(password);
+        return matcher.matches();
     }
 }
