@@ -16,6 +16,12 @@ public class GlobalErrorHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<ErrorModel> handleException(NotFoundException exception) {
+        ErrorModel errorModel = new ErrorModel(exception.getMessage(), exception.getErrorCode());
+        return new ResponseEntity<>(errorModel, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
     public ResponseEntity<ErrorModel> handleException(Exception exception) {
         ErrorModel errorModel = new ErrorModel(exception.getMessage(), ErrorCodes.Internal_Server_Error.getErrorCode());
         return new ResponseEntity<>(errorModel, HttpStatus.INTERNAL_SERVER_ERROR);

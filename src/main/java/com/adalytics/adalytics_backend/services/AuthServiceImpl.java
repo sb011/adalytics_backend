@@ -2,12 +2,16 @@ package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
+import com.adalytics.adalytics_backend.exceptions.NotFoundException;
 import com.adalytics.adalytics_backend.models.entities.User;
+import com.adalytics.adalytics_backend.models.requestModels.LoginRequestModel;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
+import com.adalytics.adalytics_backend.models.responseModels.LoginResponseModel;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
 import com.adalytics.adalytics_backend.utils.AuthHelper;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
+import com.adalytics.adalytics_backend.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +22,10 @@ import java.util.Optional;
 public class AuthServiceImpl implements IAuthService {
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private JWTUtil jwtUtil;
 
+    @Override
     public void signUp(SignupRequestModel signupRequestModel) {
         if (signupRequestModel.getEmail().isBlank()) {
             throw new BadRequestException("Email is empty.", ErrorCodes.Signup_Email_Invalid.getErrorCode());
@@ -45,5 +52,31 @@ public class AuthServiceImpl implements IAuthService {
         newUser.setPassword(encodedPassword);
 
         userRepository.save(newUser);
+    }
+
+    @Override
+    public LoginResponseModel login(LoginRequestModel loginRequestModel) {
+        if (loginRequestModel.getEmail().isBlank()) {
+            throw new BadRequestException("Email is empty.", ErrorCodes.Login_Email_Invalid.getErrorCode());
+        }
+        if (loginRequestModel.getPassword().isBlank()) {
+            throw new BadRequestException("Password is empty.", ErrorCodes.Login_Password_Invalid.getErrorCode());
+        }
+        if (!FieldValidator.isValidEmail(loginRequestModel.getEmail())) {
+            throw new BadRequestException("Email is not in right format.", ErrorCodes.Signup_Email_Invalid.getErrorCode());
+        }
+
+        User user = userRepository.findByEmail(loginRequestModel.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found.", ErrorCodes.User_Not_Found.getErrorCode()));
+
+        boolean isPasswordMatching = new BCryptPasswordEncoder().matches(loginRequestModel.getPassword(), user.getPassword());
+        if (!isPasswordMatching) {
+            throw new BadRequestException("Password not matching.", ErrorCodes.Password_Not_Matching.getErrorCode());
+        }
+
+        String token = jwtUtil.generateToken(user.getId());
+        LoginResponseModel loginResponseModel = new LoginResponseModel();
+        loginResponseModel.setToken(token);
+        return loginResponseModel;
     }
 }
