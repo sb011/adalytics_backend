@@ -10,7 +10,12 @@ public enum ErrorCodes {
     Login_Password_Invalid(12),
 
     User_Not_Found(21),
-    Password_Not_Matching(22);
+    Password_Not_Matching(22),
+
+    Platform_Token_Invalid(31),
+    Platform_Invalid(32),
+    Connector_Not_Found(33),
+    Invalid_Request_Body(34);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {
