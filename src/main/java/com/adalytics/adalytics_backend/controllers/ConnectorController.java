@@ -17,18 +17,18 @@ public class ConnectorController {
     @Autowired
     private IConnectorService connectorService;
 
-    @PostMapping("/add/connector")
+    @PostMapping("/")
     public ResponseEntity<Void> addConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
         connectorService.addConnector(connectorRequestDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/fetch/connectors/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<List<Connector>> getAllConnectors(@PathVariable("userId") String userId) {
         return new ResponseEntity<>(connectorService.fetchAllConnectors(userId), HttpStatus.OK);
     }
 
-    @DeleteMapping("/remove/connector")
+    @DeleteMapping("/")
     public ResponseEntity<Connector> removeConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
         connectorService.removeConnector(connectorRequestDTO);
         return new ResponseEntity<>(HttpStatus.OK);
