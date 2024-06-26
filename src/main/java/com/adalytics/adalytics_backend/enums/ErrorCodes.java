@@ -8,6 +8,7 @@ public enum ErrorCodes {
 
     Login_Email_Invalid(11),
     Login_Password_Invalid(12),
+    Token_Invalid(13),
 
     User_Not_Found(21),
     Password_Not_Matching(22);
