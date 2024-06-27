@@ -9,4 +9,5 @@ public class AdalyticsApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AdalyticsApplication.class, args);
 	}
+
 }
