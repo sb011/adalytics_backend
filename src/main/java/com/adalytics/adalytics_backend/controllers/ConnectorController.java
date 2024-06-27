@@ -29,7 +29,7 @@ public class ConnectorController {
     }
 
     @DeleteMapping("/")
-    public ResponseEntity<Connector> removeConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
+    public ResponseEntity<Void> removeConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
         connectorService.removeConnector(connectorRequestDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
