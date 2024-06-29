@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface IConnectorRepository extends MongoRepository<Connector, String> {
-    Optional<List<Connector>> findByUserId(String userId);
-    String deleteByIdAndUserId(String id, String userId);
+    Optional<List<Connector>> findByOrganizationId(String organizationId);
+    Optional<Connector> findByPlatformUserId(String platformUserId);
+    String deleteByIdAndOrganizationId(String id, String organizationId);
 }

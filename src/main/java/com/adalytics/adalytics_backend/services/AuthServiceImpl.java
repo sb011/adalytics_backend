@@ -1,7 +1,6 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
-import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.exceptions.NotFoundException;
 import com.adalytics.adalytics_backend.models.entities.User;
@@ -27,7 +26,7 @@ public class AuthServiceImpl implements IAuthService {
     private JWTUtil jwtUtil;
 
     @Override
-    public void signUp(SignupRequestModel signupRequestModel) {
+    public void signUp(SignupRequestModel signupRequestModel, String organizationId) {
         if (signupRequestModel.getEmail().isBlank()) {
             throw new BadRequestException("Email is empty.", ErrorCodes.Signup_Email_Invalid.getErrorCode());
         }
@@ -47,11 +46,12 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         String encodedPassword = new BCryptPasswordEncoder().encode(signupRequestModel.getPassword());
-        User newUser = new User();
-        newUser.setEmail(signupRequestModel.getEmail());
-        newUser.setUsername(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()));
-        newUser.setPassword(encodedPassword);
-        newUser.setRole(Role.USER.name());
+        User newUser = User.builder()
+                .email(signupRequestModel.getEmail())
+                .username(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()))
+                .password(encodedPassword)
+                .organizationId(organizationId)
+                .role(signupRequestModel.getRole()).build();
 
         userRepository.save(newUser);
     }

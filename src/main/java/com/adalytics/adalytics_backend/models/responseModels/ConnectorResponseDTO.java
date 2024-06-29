@@ -7,7 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class ConnectorResponseDTO {
     private String id;
-    private String userId;
     /**
      * {@link com.adalytics.adalytics_backend.enums.Platform}
      */

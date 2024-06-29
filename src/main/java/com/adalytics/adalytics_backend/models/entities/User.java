@@ -1,6 +1,7 @@
 package com.adalytics.adalytics_backend.models.entities;
 
 import com.adalytics.adalytics_backend.enums.Role;
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Data
 @Document("users")
+@Builder
 public class User implements UserDetails {
     @Id
     private String id;
@@ -23,6 +25,7 @@ public class User implements UserDetails {
      * {@link Role}
      */
     private String role;
+    private String organizationId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
