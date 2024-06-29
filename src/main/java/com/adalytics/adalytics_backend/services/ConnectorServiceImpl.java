@@ -8,6 +8,7 @@ import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDT
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
+import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class ConnectorServiceImpl implements IConnectorService {
     private IConnectorRepository connectorRepository;
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private ConnectorTransformer connectorTransformer;
 
     @Override
     public void addConnector(ConnectorRequestDTO addRequest) {
@@ -40,19 +43,15 @@ public class ConnectorServiceImpl implements IConnectorService {
             if (existingConnector.isPresent()) {
                 connector = existingConnector.get();
                 connector.setToken(addRequest.getToken());
+                connector.setExpirationTime(addRequest.getExpirationTime());
             }
         } else if (isNull(connector)) {
             Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserId(addRequest.getPlatformUserId());
             if (isExistingConnector.isPresent()) {
                 throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
             }
-            connector = Connector.builder()
-                    .organizationId(ContextUtil.getCurrentOrgId())
-                    .token(addRequest.getToken())
-                    .platform(addRequest.getPlatform())
-                    .platformUserId(addRequest.getPlatformUserId())
-                    .expirationTime(addRequest.getExpirationTime())
-                    .build();
+            connector = connectorTransformer.convertToConnector(addRequest);
+            connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }
         if (nonNull(connector)) {
             connectorRepository.save(connector);
@@ -63,7 +62,7 @@ public class ConnectorServiceImpl implements IConnectorService {
     public List<ConnectorResponseDTO> fetchAllConnectors() {
         String orgId = ContextUtil.getCurrentOrgId();
         List<Connector> connectorList = connectorRepository.findByOrganizationId(orgId).orElse(new ArrayList<>());
-        return connectorList.stream().map(connector -> new ConnectorResponseDTO(connector.getId(), connector.getPlatform(), connector.getPlatformUserId())).toList();
+        return connectorTransformer.convertToConnectorResponseDTOs(connectorList);
     }
 
     @Override
