@@ -20,6 +20,7 @@ public enum ErrorCodes {
     Platform_Invalid(32),
     Connector_Not_Found(33),
     Invalid_Request_Body(34),
+    Connector_Already_Present(35),
 
     Client_Not_Responding(41),
     Method_Not_Allowed(42),
