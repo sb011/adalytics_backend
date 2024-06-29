@@ -1,7 +1,7 @@
 package com.adalytics.adalytics_backend.controllers;
 
-import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
+import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,14 +23,14 @@ public class ConnectorController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<Connector>> getAllConnectors(@PathVariable("userId") String userId) {
-        return new ResponseEntity<>(connectorService.fetchAllConnectors(userId), HttpStatus.OK);
+    @GetMapping("/")
+    public ResponseEntity<List<ConnectorResponseDTO>> getAllConnectors() {
+        return new ResponseEntity<>(connectorService.fetchAllConnectors(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/")
-    public ResponseEntity<Connector> removeConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
-        connectorService.removeConnector(connectorRequestDTO);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> removeConnector(@PathVariable("id") String id) {
+        connectorService.removeConnector(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

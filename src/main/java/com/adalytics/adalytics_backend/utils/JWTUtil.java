@@ -1,6 +1,8 @@
 package com.adalytics.adalytics_backend.utils;
 
 import com.adalytics.adalytics_backend.constants.CommonConstants;
+import com.adalytics.adalytics_backend.enums.ErrorCodes;
+import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -21,7 +23,7 @@ public class JWTUtil {
     public String generateToken(String userId) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
-                .withClaim("userId", userId)
+                .withSubject(userId)
                 .withIssuer(issuer)
                 .withExpiresAt(new Date(System.currentTimeMillis() + CommonConstants.JWT_TOKEN_EXPIRY))
                 .sign(algorithm);
@@ -36,7 +38,7 @@ public class JWTUtil {
                     .build()
                     .verify(token);
         } catch (JWTVerificationException exception) {
-            return null;
+            throw new BadRequestException("Invalid Token !", ErrorCodes.Token_Invalid.getErrorCode());
         }
     }
 }

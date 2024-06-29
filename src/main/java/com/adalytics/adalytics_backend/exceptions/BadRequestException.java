@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class BadRequestException extends RuntimeException {
-    private String errorMessage;
-    private int errorCode;
+    private final String errorMessage;
+    private final int errorCode;
 
     public BadRequestException(String errorMessage, int errorCode) {
         super(errorMessage);
