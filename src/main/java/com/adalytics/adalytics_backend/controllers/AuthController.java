@@ -1,5 +1,6 @@
 package com.adalytics.adalytics_backend.controllers;
 
+import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.models.requestModels.LoginRequestModel;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
 import com.adalytics.adalytics_backend.models.responseModels.LoginResponseModel;
@@ -21,6 +22,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<Void> signUp(@RequestBody SignupRequestModel signupRequestModel) {
+        signupRequestModel.setRole(Role.USER.name());
         authService.signUp(signupRequestModel, ContextUtil.getCurrentOrgId());
         return new ResponseEntity<>(HttpStatus.OK);
     }

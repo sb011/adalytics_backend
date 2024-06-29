@@ -1,7 +1,6 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
-import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.exceptions.NotFoundException;
 import com.adalytics.adalytics_backend.models.entities.User;
@@ -52,7 +51,7 @@ public class AuthServiceImpl implements IAuthService {
                 .username(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()))
                 .password(encodedPassword)
                 .organizationId(organizationId)
-                .role(Role.USER.name()).build();
+                .role(signupRequestModel.getRole()).build();
 
         userRepository.save(newUser);
     }

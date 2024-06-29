@@ -1,6 +1,7 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
+import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.models.entities.Organization;
 import com.adalytics.adalytics_backend.models.requestModels.OrganizationRequestDTO;
@@ -21,7 +22,7 @@ public class OrganizationServiceImpl implements IOrganizationService {
 
     @Override
     public void createOrganization(OrganizationRequestDTO organizationRequestDTO) {
-        if(organizationRequestDTO.getOrganizationName().isBlank()) {
+        if (organizationRequestDTO.getOrganizationName().isBlank()) {
             throw new BadRequestException("Organization Name is empty.", ErrorCodes.Organization_Name_Invalid.getErrorCode());
         }
         Organization organization = Organization.builder().name(organizationRequestDTO.getOrganizationName()).build();
@@ -29,6 +30,7 @@ public class OrganizationServiceImpl implements IOrganizationService {
         SignupRequestModel signupRequestModel = SignupRequestModel.builder()
                 .email(organizationRequestDTO.getEmail())
                 .password(organizationRequestDTO.getPassword())
+                .role(Role.ADMIN.name())
                 .build();
         authService.signUp(signupRequestModel, organization.getId());
     }
