@@ -19,12 +19,12 @@ public class OrganizationServiceImpl implements IOrganizationService {
 
     @Override
     public void createOrganization(OrganizationRequestDTO organizationRequestDTO) {
-        SignupRequestModel signupRequestModel = new SignupRequestModel(
-                organizationRequestDTO.getEmail(),
-                organizationRequestDTO.getPassword()
-        );
-        authService.signUp(signupRequestModel);
-        Organization organization = new Organization(organizationRequestDTO.getOrganizationName());
+        Organization organization = Organization.builder().name(organizationRequestDTO.getOrganizationName()).build();
         organizationRepository.save(organization);
+        SignupRequestModel signupRequestModel = SignupRequestModel.builder()
+                .email(organizationRequestDTO.getEmail())
+                .password(organizationRequestDTO.getPassword())
+                .build();
+        authService.signUp(signupRequestModel, organization.getId());
     }
 }

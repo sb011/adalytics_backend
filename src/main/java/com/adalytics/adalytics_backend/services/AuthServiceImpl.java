@@ -27,7 +27,7 @@ public class AuthServiceImpl implements IAuthService {
     private JWTUtil jwtUtil;
 
     @Override
-    public void signUp(SignupRequestModel signupRequestModel) {
+    public void signUp(SignupRequestModel signupRequestModel, String organizationId) {
         if (signupRequestModel.getEmail().isBlank()) {
             throw new BadRequestException("Email is empty.", ErrorCodes.Signup_Email_Invalid.getErrorCode());
         }
@@ -47,11 +47,11 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         String encodedPassword = new BCryptPasswordEncoder().encode(signupRequestModel.getPassword());
-        User newUser = new User();
-        newUser.setEmail(signupRequestModel.getEmail());
-        newUser.setUsername(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()));
-        newUser.setPassword(encodedPassword);
-        newUser.setRole(Role.USER.name());
+        User newUser = User.builder()
+                .email(signupRequestModel.getEmail())
+                .username(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()))
+                .password(encodedPassword)
+                .role(Role.USER.name()).build();
 
         userRepository.save(newUser);
     }

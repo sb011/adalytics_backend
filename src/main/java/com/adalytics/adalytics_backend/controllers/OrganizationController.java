@@ -14,7 +14,7 @@ public class OrganizationController {
     @Autowired
     private IOrganizationService organizationService;
 
-    @PostMapping("/create")
+    @PostMapping("/")
     public ResponseEntity<Void> createOrganization(@RequestBody OrganizationRequestDTO organizationRequestDTO) {
         organizationService.createOrganization(organizationRequestDTO);
         return new ResponseEntity<>(HttpStatus.OK);
