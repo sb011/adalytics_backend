@@ -8,6 +8,7 @@ import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDT
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
+import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class ConnectorServiceImpl implements IConnectorService {
     private IConnectorRepository connectorRepository;
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private ConnectorTransformer connectorTransformer;
 
     @Override
     public void addConnector(ConnectorRequestDTO addRequest) {
@@ -40,16 +43,12 @@ public class ConnectorServiceImpl implements IConnectorService {
             if(existingConnector.isPresent()) {
                 connector = existingConnector.get();
                 connector.setToken(addRequest.getToken());
+                connector.setExpirationTime(addRequest.getExpirationTime());
             }
         }
         else if(isNull(connector)){
-            connector = Connector.builder()
-                    .userId(ContextUtil.getCurrentUserId())
-                    .token(addRequest.getToken())
-                    .platform(addRequest.getPlatform())
-                    .platformUserId(addRequest.getPlatformUserId())
-                    .expirationTime(addRequest.getExpirationTime())
-                    .build();
+            connector = connectorTransformer.convertToConnector(addRequest);
+            connector.setUserId(ContextUtil.getCurrentUserId());
         }
         if(nonNull(connector)) {
             connectorRepository.save(connector);
@@ -60,7 +59,7 @@ public class ConnectorServiceImpl implements IConnectorService {
     public List<ConnectorResponseDTO> fetchAllConnectors() {
         String userId = ContextUtil.getCurrentUserId();
         List<Connector> connectorList = connectorRepository.findByUserId(userId).orElse(new ArrayList<>());
-        return connectorList.stream().map(connector -> new ConnectorResponseDTO(connector.getId(), connector.getUserId(), connector.getPlatform(), connector.getPlatformUserId())).toList();
+        return connectorTransformer.convertToConnectorResponseDTOs(connectorList);
     }
 
     @Override
