@@ -5,12 +5,12 @@ import lombok.Data;
 
 @Data
 public class ConnectorRequestDTO {
-    private String userId;
-    private String connectorId;
-    private String token;
-    private String platformId;
+    private String id;
     /**
      * {@link Platform}
      */
     private String platform;
+    private String platformUserId;
+    private String token;
+    private String expirationTime;
 }

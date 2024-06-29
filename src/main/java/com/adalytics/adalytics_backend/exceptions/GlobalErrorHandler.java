@@ -31,13 +31,14 @@ public class GlobalErrorHandler {
         return new ResponseEntity<>(errorModel, HttpStatus.BAD_GATEWAY);
     }
 
-    // General exception - 500
+    // Auth exception - 401
     @ExceptionHandler
     public ResponseEntity<ErrorModel> handleException(AuthenticationException exception) {
         ErrorModel errorModel = new ErrorModel("Invalid Token", ErrorCodes.Token_Invalid.getErrorCode());
         return new ResponseEntity<>(errorModel, HttpStatus.UNAUTHORIZED);
     }
 
+    // General exception - 500
     @ExceptionHandler
     public ResponseEntity<ErrorModel> handleException(Exception exception) {
         ErrorModel errorModel = new ErrorModel(exception.getMessage(), ErrorCodes.Internal_Server_Error.getErrorCode());

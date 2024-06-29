@@ -20,6 +20,7 @@ public class Connector {
      * {@link com.adalytics.adalytics_backend.enums.Platform}
      */
     private String platform;
-    private String platformId;
+    private String platformUserId;
     private String token;
+    private String expirationTime;
 }
