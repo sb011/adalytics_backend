@@ -11,7 +11,15 @@ public enum ErrorCodes {
     Token_Invalid(13),
 
     User_Not_Found(21),
-    Password_Not_Matching(22);
+    Password_Not_Matching(22),
+
+    Platform_Token_Invalid(31),
+    Platform_Invalid(32),
+    Connector_Not_Found(33),
+    Invalid_Request_Body(34),
+
+    Client_Not_Responding(41),
+    Method_Not_Allowed(42);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {
