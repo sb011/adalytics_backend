@@ -51,8 +51,8 @@ public class FieldValidator {
         }
     }
 
-    public static void validateConnectorId(String userId) {
-        if(isBlank(userId)) {
+    public static void validateConnectorId(String connectorId) {
+        if(isBlank(connectorId)) {
             throw new NotFoundException("Connector Not Found", ErrorCodes.Connector_Not_Found.getErrorCode());
         }
     }

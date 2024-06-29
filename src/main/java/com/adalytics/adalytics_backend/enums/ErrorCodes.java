@@ -1,5 +1,8 @@
 package com.adalytics.adalytics_backend.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ErrorCodes {
     Internal_Server_Error(0),
 
@@ -24,9 +27,5 @@ public enum ErrorCodes {
     private final int errorCode;
     ErrorCodes(int errorCode) {
         this.errorCode = errorCode;
-    }
-
-    public int getErrorCode() {
-        return this.errorCode;
     }
 }
