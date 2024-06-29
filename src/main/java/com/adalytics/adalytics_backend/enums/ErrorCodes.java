@@ -22,7 +22,9 @@ public enum ErrorCodes {
     Invalid_Request_Body(34),
 
     Client_Not_Responding(41),
-    Method_Not_Allowed(42);
+    Method_Not_Allowed(42),
+
+    Organization_Name_Invalid(51);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {

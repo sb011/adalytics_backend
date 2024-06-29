@@ -51,6 +51,7 @@ public class AuthServiceImpl implements IAuthService {
                 .email(signupRequestModel.getEmail())
                 .username(AuthHelper.getUsernameFromEmail(signupRequestModel.getEmail()))
                 .password(encodedPassword)
+                .organizationId(organizationId)
                 .role(Role.USER.name()).build();
 
         userRepository.save(newUser);
