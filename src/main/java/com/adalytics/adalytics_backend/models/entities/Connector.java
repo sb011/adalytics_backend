@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Connector {
     @Id
     private String id;
-    private String userId;
+    private String organizationId;
     /**
      * {@link com.adalytics.adalytics_backend.enums.Platform}
      */

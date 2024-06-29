@@ -34,39 +34,42 @@ public class ConnectorServiceImpl implements IConnectorService {
 
     @Override
     public void addConnector(ConnectorRequestDTO addRequest) {
-        if(isNull(addRequest))
+        if (isNull(addRequest))
             throw new BadRequestException("Invalid Request", ErrorCodes.Invalid_Request_Body.getErrorCode());
         validateRequest(addRequest);
         Connector connector = null;
-        if(isNotBlank(addRequest.getId())) {
+        if (isNotBlank(addRequest.getId())) {
             Optional<Connector> existingConnector = connectorRepository.findById(addRequest.getId());
-            if(existingConnector.isPresent()) {
+            if (existingConnector.isPresent()) {
                 connector = existingConnector.get();
                 connector.setToken(addRequest.getToken());
                 connector.setExpirationTime(addRequest.getExpirationTime());
             }
-        }
-        else if(isNull(connector)){
+        } else if (isNull(connector)) {
+            Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserId(addRequest.getPlatformUserId());
+            if (isExistingConnector.isPresent()) {
+                throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
+            }
             connector = connectorTransformer.convertToConnector(addRequest);
-            connector.setUserId(ContextUtil.getCurrentUserId());
+            connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }
-        if(nonNull(connector)) {
+        if (nonNull(connector)) {
             connectorRepository.save(connector);
         }
     }
 
     @Override
     public List<ConnectorResponseDTO> fetchAllConnectors() {
-        String userId = ContextUtil.getCurrentUserId();
-        List<Connector> connectorList = connectorRepository.findByUserId(userId).orElse(new ArrayList<>());
+        String orgId = ContextUtil.getCurrentOrgId();
+        List<Connector> connectorList = connectorRepository.findByOrganizationId(orgId).orElse(new ArrayList<>());
         return connectorTransformer.convertToConnectorResponseDTOs(connectorList);
     }
 
     @Override
     public void removeConnector(String id) {
         FieldValidator.validateConnectorId(id);
-        String userId = ContextUtil.getCurrentUserId();
-        String connectorId = connectorRepository.deleteByIdAndUserId(id, userId);
+        String orgId = ContextUtil.getCurrentOrgId();
+        String connectorId = connectorRepository.deleteByIdAndOrganizationId(id, orgId);
         FieldValidator.validateConnectorId(connectorId);
     }
 

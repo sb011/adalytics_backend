@@ -12,4 +12,11 @@ public class ContextUtil {
         FieldValidator.validateUserId(user.getId());
         return user.getId();
     }
+
+    public static String getCurrentOrgId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        FieldValidator.validateUserId(user.getOrganizationId());
+        return user.getOrganizationId();
+    }
 }
