@@ -27,11 +27,15 @@ public class OrganizationServiceImpl implements IOrganizationService {
         }
         Organization organization = Organization.builder().name(organizationRequestDTO.getOrganizationName()).build();
         organizationRepository.save(organization);
-        SignupRequestDTO signupRequestDTO = SignupRequestDTO.builder()
-                .email(organizationRequestDTO.getEmail())
-                .password(organizationRequestDTO.getPassword())
-                .role(Role.ADMIN.name())
-                .build();
-        authService.signUp(signupRequestDTO, organization.getId());
+        try {
+            SignupRequestDTO signupRequestDTO = SignupRequestDTO.builder()
+                    .email(organizationRequestDTO.getEmail())
+                    .password(organizationRequestDTO.getPassword())
+                    .role(Role.ADMIN.name())
+                    .build();
+            authService.signUp(signupRequestDTO, organization.getId());
+        } catch (Exception exception) {
+            organizationRepository.deleteById(organization.getId());
+        }
     }
 }
