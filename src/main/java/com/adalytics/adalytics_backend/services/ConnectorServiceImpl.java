@@ -12,9 +12,12 @@ import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +25,6 @@ import java.util.Optional;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
-import static org.springframework.http.HttpMethod.GET;
 
 @Service
 public class ConnectorServiceImpl implements IConnectorService {
@@ -55,7 +57,7 @@ public class ConnectorServiceImpl implements IConnectorService {
                 connector.setToken(addRequest.getToken());
                 connector.setExpirationTime(addRequest.getExpirationTime());
             }
-        } else if (isNull(connector)) {
+        } else {
             Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserId(addRequest.getPlatformUserId());
             if (isExistingConnector.isPresent()) {
                 throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
@@ -64,11 +66,14 @@ public class ConnectorServiceImpl implements IConnectorService {
             connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }
         if (nonNull(connector)) {
-//            LongLivedTokenResponseDTO longLivedTokenResponseDTO =
-            getLongLivedToken(connector.getToken());
-//            long expiresAt = System.currentTimeMillis() + (longLivedTokenResponseDTO.getExpiresIn() * 1000);
-//            connector.setToken(longLivedTokenResponseDTO.getAccessToken());
-//            connector.setExpirationTime(Long.toString(expiresAt));
+            JsonNode response = getLongLivedToken(connector.getToken());
+            if (response.has("error")) {
+                JsonNode errorNode = response.get("error");
+                throw new BadRequestException(errorNode.get("message").asText(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
+            }
+            long expiresAt = System.currentTimeMillis() + (response.get("expires_in").longValue() * 1000);
+            connector.setToken(String.valueOf(response.get("access_token")));
+            connector.setExpirationTime(Long.toString(expiresAt));
             connectorRepository.save(connector);
         }
     }
@@ -93,10 +98,11 @@ public class ConnectorServiceImpl implements IConnectorService {
         FieldValidator.validatePlatformName(connectorRequestDTO.getPlatform());
     }
 
-    private void getLongLivedToken(String token) throws Exception {
+    private JsonNode getLongLivedToken(String token) throws Exception {
         String url = String.format("https://graph.facebook.com/%s/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s",
                 graphApiVersion, appId, appSecret, token);
-//        String encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8);
-        System.out.println(apiService.callExternalApi(url, GET.name(), null, null));
+        String response = apiService.callExternalApi(url, "GET", null, null);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readTree(response);
     }
 }
