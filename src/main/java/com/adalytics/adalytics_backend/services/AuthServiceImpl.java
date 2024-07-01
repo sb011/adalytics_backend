@@ -3,12 +3,15 @@ package com.adalytics.adalytics_backend.services;
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.exceptions.NotFoundException;
+import com.adalytics.adalytics_backend.models.entities.Token;
 import com.adalytics.adalytics_backend.models.entities.User;
 import com.adalytics.adalytics_backend.models.requestModels.LoginRequestModel;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
 import com.adalytics.adalytics_backend.models.responseModels.LoginResponseModel;
+import com.adalytics.adalytics_backend.repositories.interfaces.ITokenRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
+import com.adalytics.adalytics_backend.services.interfaces.IEmailSender;
 import com.adalytics.adalytics_backend.utils.AuthHelper;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
 import com.adalytics.adalytics_backend.utils.JWTUtil;
@@ -17,6 +20,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
+
+import static com.adalytics.adalytics_backend.constants.CommonConstants.EMAIL_TOKEN_EXPIRY;
 
 @Service
 public class AuthServiceImpl implements IAuthService {
@@ -24,6 +30,10 @@ public class AuthServiceImpl implements IAuthService {
     private IUserRepository userRepository;
     @Autowired
     private JWTUtil jwtUtil;
+    @Autowired
+    private IEmailSender emailSender;
+    @Autowired
+    private ITokenRepository tokenRepository;
 
     @Override
     public void signUp(SignupRequestModel signupRequestModel, String organizationId) {
@@ -54,6 +64,7 @@ public class AuthServiceImpl implements IAuthService {
                 .role(signupRequestModel.getRole()).build();
 
         userRepository.save(newUser);
+        createTokenAndSendMail(signupRequestModel.getEmail());
     }
 
     @Override
@@ -80,5 +91,28 @@ public class AuthServiceImpl implements IAuthService {
         LoginResponseModel loginResponseModel = new LoginResponseModel();
         loginResponseModel.setToken(token);
         return loginResponseModel;
+    }
+
+    @Override
+    public void verifyEmail(String token) {
+        Optional<Token> existingToken = tokenRepository.findByToken(token);
+        if(existingToken.isEmpty() || existingToken.get().isExpired(System.currentTimeMillis())) {
+            throw new BadRequestException("Token Expired!", ErrorCodes.Token_Expired.getErrorCode());
+        }
+        User user = userRepository.findByEmail(existingToken.get().getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found.", ErrorCodes.User_Not_Found.getErrorCode()));
+        user.setEnabled(true);
+        userRepository.save(user);
+    }
+
+    private void createTokenAndSendMail(String email){
+        Token token = Token.builder()
+                .email(email)
+                .token(UUID.randomUUID().toString())
+                .expirationTime(System.currentTimeMillis() + EMAIL_TOKEN_EXPIRY)
+                .build();
+        tokenRepository.save(token);
+        String link = "http://localhost:8080/api/v1/auth/verify?token=" + token.getToken();
+        emailSender.send(email, link);
     }
 }

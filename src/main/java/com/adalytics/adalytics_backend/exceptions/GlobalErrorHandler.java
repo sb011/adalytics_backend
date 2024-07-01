@@ -2,6 +2,7 @@ package com.adalytics.adalytics_backend.exceptions;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.models.ErrorModel;
+import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -36,6 +37,13 @@ public class GlobalErrorHandler {
     public ResponseEntity<ErrorModel> handleException(AuthenticationException exception) {
         ErrorModel errorModel = new ErrorModel("Invalid Token", ErrorCodes.Token_Invalid.getErrorCode());
         return new ResponseEntity<>(errorModel, HttpStatus.UNAUTHORIZED);
+    }
+
+    // Messaging exception - 500
+    @ExceptionHandler
+    public ResponseEntity<ErrorModel> handleException(MessagingException exception) {
+        ErrorModel errorModel = new ErrorModel(exception.getMessage(), ErrorCodes.Failed_To_Send_Email.getErrorCode());
+        return new ResponseEntity<>(errorModel, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // General exception - 500

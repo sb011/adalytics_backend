@@ -12,5 +12,5 @@ public class ConnectorRequestDTO {
     private String platform;
     private String platformUserId;
     private String token;
-    private String expirationTime;
+    private Long expirationTime;
 }

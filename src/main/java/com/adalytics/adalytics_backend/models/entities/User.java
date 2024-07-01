@@ -26,6 +26,7 @@ public class User implements UserDetails {
      */
     private String role;
     private String organizationId;
+    private boolean enabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

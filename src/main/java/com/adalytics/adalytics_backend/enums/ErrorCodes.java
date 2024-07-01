@@ -12,6 +12,8 @@ public enum ErrorCodes {
     Login_Email_Invalid(11),
     Login_Password_Invalid(12),
     Token_Invalid(13),
+    Token_Expired(14),
+    Email_Not_Verified(15),
 
     User_Not_Found(21),
     Password_Not_Matching(22),
@@ -25,7 +27,9 @@ public enum ErrorCodes {
     Client_Not_Responding(41),
     Method_Not_Allowed(42),
 
-    Organization_Name_Invalid(51);
+    Organization_Name_Invalid(51),
+
+    Failed_To_Send_Email(61);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {
