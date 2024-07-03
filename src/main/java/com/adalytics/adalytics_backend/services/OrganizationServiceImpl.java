@@ -8,6 +8,7 @@ import com.adalytics.adalytics_backend.models.entities.User;
 import com.adalytics.adalytics_backend.models.requestModels.OrganizationRequestDTO;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
 import com.adalytics.adalytics_backend.models.responseModels.UserResponseDTO;
+import com.adalytics.adalytics_backend.models.requestModels.SignupRequestDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IOrganizationRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
@@ -39,12 +40,21 @@ public class OrganizationServiceImpl implements IOrganizationService {
         }
         Organization organization = Organization.builder().name(organizationRequestDTO.getOrganizationName()).build();
         organizationRepository.save(organization);
-        SignupRequestModel signupRequestModel = SignupRequestModel.builder()
-                .email(organizationRequestDTO.getEmail())
-                .password(organizationRequestDTO.getPassword())
-                .role(Role.ADMIN.name())
-                .build();
-        authService.signUp(signupRequestModel, organization.getId());
+        try {
+            SignupRequestDTO signupRequestDTO = SignupRequestDTO.builder()
+                    .email(organizationRequestDTO.getEmail())
+                    .password(organizationRequestDTO.getPassword())
+                    .role(Role.ADMIN.name())
+                    .build();
+            authService.signUp(signupRequestDTO, organization.getId());
+        } catch (BadRequestException exception) {
+            organizationRepository.deleteById(organization.getId());
+            throw new BadRequestException(exception.getErrorMessage(), exception.getErrorCode());
+        } catch (Exception exception) {
+            organizationRepository.deleteById(organization.getId());
+            throw exception;
+        }
+
     }
 
     @Override
