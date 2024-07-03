@@ -26,6 +26,7 @@ public class Connector {
     private String platform;
     private String platformUserId;
     private String token;
+    private String email;
     private String expirationTime;
     @CreatedDate
     private LocalDateTime createdAt;

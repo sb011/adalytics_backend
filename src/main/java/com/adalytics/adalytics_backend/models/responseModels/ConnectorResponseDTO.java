@@ -13,5 +13,5 @@ public class ConnectorResponseDTO {
     private String email;
     private String platform;
     private String platformUserId;
-    private String tokenExpiry;
+    private String expirationTime;
 }
