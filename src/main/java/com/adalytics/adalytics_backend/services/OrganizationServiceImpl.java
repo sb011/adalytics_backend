@@ -6,7 +6,6 @@ import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.models.entities.Organization;
 import com.adalytics.adalytics_backend.models.entities.User;
 import com.adalytics.adalytics_backend.models.requestModels.OrganizationRequestDTO;
-import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
 import com.adalytics.adalytics_backend.models.responseModels.UserResponseDTO;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IOrganizationRepository;
