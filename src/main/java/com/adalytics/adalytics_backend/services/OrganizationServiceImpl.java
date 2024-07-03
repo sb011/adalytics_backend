@@ -34,8 +34,13 @@ public class OrganizationServiceImpl implements IOrganizationService {
                     .role(Role.ADMIN.name())
                     .build();
             authService.signUp(signupRequestDTO, organization.getId());
+        } catch (BadRequestException exception) {
+            organizationRepository.deleteById(organization.getId());
+            throw new BadRequestException(exception.getErrorMessage(), exception.getErrorCode());
         } catch (Exception exception) {
             organizationRepository.deleteById(organization.getId());
+            throw exception;
         }
+
     }
 }

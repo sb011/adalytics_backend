@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Service
 public class ApiService {
-    public String callExternalApi(String url, String method, String requestBody, Map<String, String> headers) throws Exception {
+    public String callExternalApi(String url, String method, String requestBody, Map<String, String> headers) {
 
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
             HttpUriRequestBase httpRequest;

@@ -12,10 +12,12 @@ import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -58,7 +60,7 @@ public class ConnectorServiceImpl implements IConnectorService {
                 connector.setExpirationTime(addRequest.getExpirationTime());
             }
         } else {
-            Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserId(addRequest.getPlatformUserId());
+            Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserIdAndOrganizationId(addRequest.getPlatformUserId(), ContextUtil.getCurrentOrgId());
             if (isExistingConnector.isPresent()) {
                 throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
             }
@@ -66,16 +68,25 @@ public class ConnectorServiceImpl implements IConnectorService {
             connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }
         if (nonNull(connector)) {
-            JsonNode response = getLongLivedToken(connector.getToken());
-            if (response.has("error")) {
-                JsonNode errorNode = response.get("error");
-                throw new BadRequestException(errorNode.get("message").asText(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
-            }
-            long expiresAt = System.currentTimeMillis() + (response.get("expires_in").longValue() * 1000);
-            connector.setToken(String.valueOf(response.get("access_token")));
-            connector.setExpirationTime(Long.toString(expiresAt));
             connectorRepository.save(connector);
+            updateConnectorToken(connector);
         }
+    }
+
+    @Async
+    private void updateConnectorToken(Connector connector) throws JsonProcessingException {
+        String url = String.format("https://graph.facebook.com/%s/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s",
+                graphApiVersion, appId, appSecret, connector.getToken());
+        String response = apiService.callExternalApi(url, "GET", null, null);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonResponse = objectMapper.readTree(response);
+        if (jsonResponse.has("error")) {
+            JsonNode errorNode = jsonResponse.get("error");
+            throw new BadRequestException(errorNode.get("message").asText(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
+        }
+        long expiresAt = System.currentTimeMillis() + (jsonResponse.get("expires_in").longValue() * 1000);
+        connector.setToken(String.valueOf(jsonResponse.get("access_token")));
+        connector.setExpirationTime(Long.toString(expiresAt));
     }
 
     @Override
@@ -96,13 +107,5 @@ public class ConnectorServiceImpl implements IConnectorService {
     private void validateRequest(ConnectorRequestDTO connectorRequestDTO) {
         FieldValidator.validatePlatformToken(connectorRequestDTO.getToken());
         FieldValidator.validatePlatformName(connectorRequestDTO.getPlatform());
-    }
-
-    private JsonNode getLongLivedToken(String token) throws Exception {
-        String url = String.format("https://graph.facebook.com/%s/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s",
-                graphApiVersion, appId, appSecret, token);
-        String response = apiService.callExternalApi(url, "GET", null, null);
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readTree(response);
     }
 }
