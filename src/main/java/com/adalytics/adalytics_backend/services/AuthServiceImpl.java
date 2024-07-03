@@ -1,6 +1,7 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
+import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.exceptions.NotFoundException;
 import com.adalytics.adalytics_backend.models.entities.Token;
@@ -13,6 +14,7 @@ import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
 import com.adalytics.adalytics_backend.services.interfaces.IEmailSender;
 import com.adalytics.adalytics_backend.utils.AuthHelper;
+import com.adalytics.adalytics_backend.utils.EmailHelper;
 import com.adalytics.adalytics_backend.utils.FieldValidator;
 import com.adalytics.adalytics_backend.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +32,6 @@ public class AuthServiceImpl implements IAuthService {
     private IUserRepository userRepository;
     @Autowired
     private JWTUtil jwtUtil;
-    @Autowired
-    private IEmailSender emailSender;
     @Autowired
     private ITokenRepository tokenRepository;
 
@@ -62,9 +62,10 @@ public class AuthServiceImpl implements IAuthService {
                 .password(encodedPassword)
                 .organizationId(organizationId)
                 .role(signupRequestModel.getRole()).build();
-
+        if(Role.USER.name().equals(newUser.getRole())) {
+            newUser.setEnabled(true);
+        }
         userRepository.save(newUser);
-        createTokenAndSendMail(signupRequestModel.getEmail());
     }
 
     @Override
@@ -103,16 +104,5 @@ public class AuthServiceImpl implements IAuthService {
                 .orElseThrow(() -> new NotFoundException("User not found.", ErrorCodes.User_Not_Found.getErrorCode()));
         user.setEnabled(true);
         userRepository.save(user);
-    }
-
-    private void createTokenAndSendMail(String email){
-        Token token = Token.builder()
-                .email(email)
-                .token(UUID.randomUUID().toString())
-                .expirationTime(System.currentTimeMillis() + EMAIL_TOKEN_EXPIRY)
-                .build();
-        tokenRepository.save(token);
-        String link = "http://localhost:8080/api/v1/auth/verify?token=" + token.getToken();
-        emailSender.send(email, link);
     }
 }
