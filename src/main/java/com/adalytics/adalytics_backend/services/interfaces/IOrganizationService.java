@@ -8,4 +8,6 @@ import java.util.List;
 public interface IOrganizationService {
     void createOrganization(OrganizationRequestDTO organizationRequestDTO);
     List<UserResponseDTO> getOrganizationUsers();
+
+    void deleteUser(String userId);
 }
