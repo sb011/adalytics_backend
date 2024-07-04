@@ -27,4 +27,10 @@ public class OrganizationController {
     public ResponseEntity<List<UserResponseDTO>> getOrganizationUsers() {
         return new ResponseEntity<>(organizationService.getOrganizationUsers(), HttpStatus.OK);
     }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        organizationService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

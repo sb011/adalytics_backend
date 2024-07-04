@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrganizationServiceImpl implements IOrganizationService {
@@ -62,5 +61,10 @@ public class OrganizationServiceImpl implements IOrganizationService {
         List<User> users = userRepository.findByOrganizationId(orgId);
 
         return connectorTransformer.convertToUserResponseDTOs(users);
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        userRepository.findById(userId).orElseThrow(() -> new BadRequestException("User Not Found!", ErrorCodes.User_Not_Found.getErrorCode()));
     }
 }
