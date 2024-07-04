@@ -18,7 +18,7 @@ public class ConnectorController {
     private IConnectorService connectorService;
 
     @PostMapping("/")
-    public ResponseEntity<Void> addConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) {
+    public ResponseEntity<Void> addConnector(@RequestBody ConnectorRequestDTO connectorRequestDTO) throws Exception {
         connectorService.addConnector(connectorRequestDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -10,6 +10,8 @@ public class ConnectorResponseDTO {
     /**
      * {@link com.adalytics.adalytics_backend.enums.Platform}
      */
+    private String email;
     private String platform;
     private String platformUserId;
+    private Long expirationTime;
 }

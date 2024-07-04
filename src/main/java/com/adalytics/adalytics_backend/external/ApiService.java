@@ -5,9 +5,10 @@ import com.adalytics.adalytics_backend.exceptions.BadGatewayException;
 import com.adalytics.adalytics_backend.exceptions.MethodNotAllowedException;
 import org.apache.hc.client5.http.classic.methods.*;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,7 @@ import java.util.Map;
 
 @Service
 public class ApiService {
-    public String callExternalApi(String url, String method, String requestBody, Map<String, String> headers) throws Exception {
-        String response = null;
+    public String callExternalApi(String url, String method, String requestBody, Map<String, String> headers) {
 
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
             HttpUriRequestBase httpRequest;
@@ -50,19 +50,11 @@ public class ApiService {
                     httpRequest.addHeader(entry.getKey(), entry.getValue());
                 }
             }
-
-            response = httpClient.execute(httpRequest, clientResponse -> {
-                int status = clientResponse.getCode();
-                if (status >= 200 && status < 300) {
-                    return clientResponse.getEntity().toString();
-                } else {
-                    throw new BadGatewayException("External API returned status code: " + status, ErrorCodes.Client_Not_Responding.getErrorCode());
-                }
-            });
+            try (CloseableHttpResponse res = httpClient.execute(httpRequest)) {
+                return EntityUtils.toString(res.getEntity());
+            }
         } catch (Exception e) {
             throw new BadGatewayException("Error while calling external API: " + e.getMessage(), ErrorCodes.Client_Not_Responding.getErrorCode());
         }
-
-        return response;
     }
 }

@@ -5,29 +5,37 @@ import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.models.entities.Organization;
 import com.adalytics.adalytics_backend.models.requestModels.InviteMemberDTO;
+import com.adalytics.adalytics_backend.models.entities.User;
 import com.adalytics.adalytics_backend.models.requestModels.OrganizationRequestDTO;
-import com.adalytics.adalytics_backend.models.requestModels.SignupRequestModel;
+import com.adalytics.adalytics_backend.models.responseModels.UserResponseDTO;
+import com.adalytics.adalytics_backend.models.requestModels.SignupRequestDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IOrganizationRepository;
+import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
 import com.adalytics.adalytics_backend.services.interfaces.IOrganizationService;
+import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.EmailHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+@Slf4j
 @Service
 public class OrganizationServiceImpl implements IOrganizationService {
 
     @Autowired
     private IOrganizationRepository organizationRepository;
     @Autowired
+    private IUserRepository userRepository;
+    @Autowired
     private IAuthService authService;
+    @Autowired
+    private ConnectorTransformer connectorTransformer;
     @Autowired
     private EmailHelper emailHelper;
 
@@ -38,13 +46,29 @@ public class OrganizationServiceImpl implements IOrganizationService {
         }
         Organization organization = Organization.builder().name(organizationRequestDTO.getOrganizationName()).build();
         organizationRepository.save(organization);
-        SignupRequestModel signupRequestModel = SignupRequestModel.builder()
-                .email(organizationRequestDTO.getEmail())
-                .password(organizationRequestDTO.getPassword())
-                .role(Role.ADMIN.name())
-                .build();
-        authService.signUp(signupRequestModel, organization.getId());
-        emailHelper.createTokenAndSendVerificationMail(signupRequestModel.getEmail());
+        try {
+            SignupRequestDTO signupRequestDTO = SignupRequestDTO.builder()
+                    .email(organizationRequestDTO.getEmail())
+                    .password(organizationRequestDTO.getPassword())
+                    .role(Role.ADMIN.name())
+                    .build();
+            authService.signUp(signupRequestDTO, organization.getId());
+            emailHelper.createTokenAndSendVerificationMail(signupRequestDTO.getEmail());
+        } catch (BadRequestException exception) {
+            organizationRepository.deleteById(organization.getId());
+            throw new BadRequestException(exception.getErrorMessage(), exception.getErrorCode());
+        } catch (Exception exception) {
+            organizationRepository.deleteById(organization.getId());
+            throw exception;
+        }
+    }
+
+    @Override
+    public List<UserResponseDTO> getOrganizationUsers() {
+        String orgId = ContextUtil.getCurrentOrgId();
+        List<User> users = userRepository.findByOrganizationId(orgId);
+
+        return connectorTransformer.convertToUserResponseDTOs(users);
     }
 
     @Override
@@ -53,13 +77,18 @@ public class OrganizationServiceImpl implements IOrganizationService {
             return;
         }
         inviteMemberDTOList.forEach(member -> {
-            SignupRequestModel signupRequestModel = SignupRequestModel.builder()
+            SignupRequestDTO signupRequestDTO = SignupRequestDTO.builder()
                     .email(member.getEmail())
                     .password(generateRandomPassword())
                     .role(Role.USER.name())
                     .build();
-            authService.signUp(signupRequestModel, ContextUtil.getCurrentOrgId());
-            emailHelper.sendInvitationMail(member.getEmail(), signupRequestModel.getPassword());
+            try {
+                authService.signUp(signupRequestDTO, ContextUtil.getCurrentOrgId());
+                String organizationName = organizationRepository.findById(ContextUtil.getCurrentOrgId()).map(Organization::getName).orElse("");
+                emailHelper.sendInvitationMail(organizationName, member.getEmail(), signupRequestDTO.getPassword());
+            } catch (Exception ex) {
+                log.error("Failed to invite member : {} with an exception :", member.getEmail(), ex);
+            }
         });
     }
 

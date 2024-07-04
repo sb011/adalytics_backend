@@ -6,7 +6,7 @@ import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDT
 import java.util.List;
 
 public interface IConnectorService {
-    void addConnector(ConnectorRequestDTO addRequest);
+    void addConnector(ConnectorRequestDTO addRequest) throws Exception;
     List<ConnectorResponseDTO> fetchAllConnectors();
     void removeConnector(String id);
 }

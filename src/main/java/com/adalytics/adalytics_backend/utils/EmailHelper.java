@@ -42,8 +42,7 @@ public class EmailHelper {
     }
 
     @Async
-    public void sendInvitationMail(String emailId, String password) {
-        String organizationName = organizationRepository.findById(ContextUtil.getCurrentOrgId()).map(Organization::getName).orElse("");
+    public void sendInvitationMail(String organizationName, String emailId, String password) {
         emailSender.send(emailId,generateEmailSnippet(organizationName,invitationLink,password));
     }
 

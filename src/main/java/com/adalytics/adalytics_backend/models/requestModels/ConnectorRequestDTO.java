@@ -9,6 +9,7 @@ public class ConnectorRequestDTO {
     /**
      * {@link Platform}
      */
+    private String email;
     private String platform;
     private String platformUserId;
     private String token;
