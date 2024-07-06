@@ -7,4 +7,5 @@ import com.adalytics.adalytics_backend.models.responseModels.LoginResponseDTO;
 public interface IAuthService {
     void signUp(SignupRequestDTO signupRequestDTO, String organizationId);
     LoginResponseDTO login(LoginRequestDTO loginRequestDTO);
+    void verifyEmail(String token);
 }

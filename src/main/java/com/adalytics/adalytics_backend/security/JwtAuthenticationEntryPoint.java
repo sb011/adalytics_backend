@@ -1,5 +1,6 @@
 package com.adalytics.adalytics_backend.security;
 
+import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

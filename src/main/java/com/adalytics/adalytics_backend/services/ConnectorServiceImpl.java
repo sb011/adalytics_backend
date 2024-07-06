@@ -86,7 +86,7 @@ public class ConnectorServiceImpl implements IConnectorService {
         }
         long expiresAt = System.currentTimeMillis() + (jsonResponse.get("expires_in").longValue() * 1000);
         connector.setToken(String.valueOf(jsonResponse.get("access_token")));
-        connector.setExpirationTime(Long.toString(expiresAt));
+        connector.setExpirationTime(expiresAt);
         connectorRepository.save(connector);
     }
 

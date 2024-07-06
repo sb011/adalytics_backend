@@ -1,5 +1,6 @@
 package com.adalytics.adalytics_backend.controllers;
 
+import com.adalytics.adalytics_backend.models.requestModels.InviteMemberDTO;
 import com.adalytics.adalytics_backend.models.requestModels.OrganizationRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.UserResponseDTO;
 import com.adalytics.adalytics_backend.services.interfaces.IOrganizationService;
@@ -26,6 +27,12 @@ public class OrganizationController {
     @GetMapping("/users")
     public ResponseEntity<List<UserResponseDTO>> getOrganizationUsers() {
         return new ResponseEntity<>(organizationService.getOrganizationUsers(), HttpStatus.OK);
+    }
+
+    @PostMapping("/invite")
+    public ResponseEntity<Void> inviteMembers(@RequestBody List<InviteMemberDTO> inviteMemberDTOList) {
+        organizationService.inviteMembers(inviteMemberDTOList);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/users/{id}")

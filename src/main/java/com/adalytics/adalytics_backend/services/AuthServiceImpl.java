@@ -1,9 +1,12 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
+import com.adalytics.adalytics_backend.enums.Role;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.exceptions.NotFoundException;
+import com.adalytics.adalytics_backend.models.entities.Token;
 import com.adalytics.adalytics_backend.models.entities.User;
+import com.adalytics.adalytics_backend.repositories.interfaces.ITokenRepository;
 import com.adalytics.adalytics_backend.models.requestModels.LoginRequestDTO;
 import com.adalytics.adalytics_backend.models.requestModels.SignupRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.LoginResponseDTO;
@@ -17,6 +20,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
+
+import static com.adalytics.adalytics_backend.constants.CommonConstants.EMAIL_TOKEN_EXPIRY;
 
 @Service
 public class AuthServiceImpl implements IAuthService {
@@ -24,6 +30,8 @@ public class AuthServiceImpl implements IAuthService {
     private IUserRepository userRepository;
     @Autowired
     private JWTUtil jwtUtil;
+    @Autowired
+    private ITokenRepository tokenRepository;
 
     @Override
     public void signUp(SignupRequestDTO signupRequestDTO, String organizationId) {
@@ -52,7 +60,9 @@ public class AuthServiceImpl implements IAuthService {
                 .password(encodedPassword)
                 .organizationId(organizationId)
                 .role(signupRequestDTO.getRole()).build();
-
+        if(Role.USER.name().equals(newUser.getRole())) {
+            newUser.setEnabled(true);
+        }
         userRepository.save(newUser);
     }
 
@@ -70,7 +80,9 @@ public class AuthServiceImpl implements IAuthService {
 
         User user = userRepository.findByEmail(loginRequestDTO.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found.", ErrorCodes.User_Not_Found.getErrorCode()));
-
+        if(!user.isEnabled()) {
+            throw new BadRequestException("Email not verified", ErrorCodes.Email_Not_Verified.getErrorCode());
+        }
         boolean isPasswordMatching = new BCryptPasswordEncoder().matches(loginRequestDTO.getPassword(), user.getPassword());
         if (!isPasswordMatching) {
             throw new BadRequestException("Password not matching.", ErrorCodes.Password_Not_Matching.getErrorCode());
@@ -80,5 +92,17 @@ public class AuthServiceImpl implements IAuthService {
         LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
         loginResponseDTO.setToken(token);
         return loginResponseDTO;
+    }
+
+    @Override
+    public void verifyEmail(String token) {
+        Optional<Token> existingToken = tokenRepository.findByToken(token);
+        if(existingToken.isEmpty() || existingToken.get().isExpired(System.currentTimeMillis())) {
+            throw new BadRequestException("Token Expired!", ErrorCodes.Token_Expired.getErrorCode());
+        }
+        User user = userRepository.findByEmail(existingToken.get().getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found.", ErrorCodes.User_Not_Found.getErrorCode()));
+        user.setEnabled(true);
+        userRepository.save(user);
     }
 }
