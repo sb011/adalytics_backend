@@ -12,4 +12,6 @@ public interface IOrganizationService {
     void createOrganization(OrganizationRequestDTO organizationRequestDTO);
     List<UserResponseDTO> getOrganizationUsers();
     void inviteMembers(List<InviteMemberDTO> inviteMemberDTOList);
+
+    void deleteUser(String userId);
 }

@@ -96,4 +96,9 @@ public class OrganizationServiceImpl implements IOrganizationService {
         //TODO : will write code to generate random strong password
         return "Abcd@1234";
     }
+
+    @Override
+    public void deleteUser(String userId) {
+        userRepository.findById(userId).orElseThrow(() -> new BadRequestException("User Not Found!", ErrorCodes.User_Not_Found.getErrorCode()));
+    }
 }

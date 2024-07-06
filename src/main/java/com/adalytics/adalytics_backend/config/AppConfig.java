@@ -16,6 +16,6 @@ public class AppConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findById(username).orElseThrow(() -> new BadRequestException("User Not Found !", ErrorCodes.User_Not_Found.getErrorCode()));
+        return username -> userRepository.findById(username).orElseThrow(() -> new BadRequestException("User Not Found!", ErrorCodes.User_Not_Found.getErrorCode()));
     }
 }

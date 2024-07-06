@@ -34,4 +34,10 @@ public class OrganizationController {
         organizationService.inviteMembers(inviteMemberDTOList);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        organizationService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }
