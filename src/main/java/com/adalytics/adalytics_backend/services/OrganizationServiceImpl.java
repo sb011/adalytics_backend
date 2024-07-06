@@ -99,6 +99,6 @@ public class OrganizationServiceImpl implements IOrganizationService {
 
     @Override
     public void deleteUser(String userId) {
-        userRepository.findById(userId).orElseThrow(() -> new BadRequestException("User Not Found!", ErrorCodes.User_Not_Found.getErrorCode()));
+        userRepository.deleteById(userId);
     }
 }

@@ -6,11 +6,13 @@ import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 @RequestMapping("/api/v1/connectors")
 public class ConnectorController {
 
@@ -23,6 +25,7 @@ public class ConnectorController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/")
     public ResponseEntity<List<ConnectorResponseDTO>> getAllConnectors() {
         return new ResponseEntity<>(connectorService.fetchAllConnectors(), HttpStatus.OK);

@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+import static com.adalytics.adalytics_backend.constants.CommonConstants.ROLE;
+import static com.adalytics.adalytics_backend.constants.CommonConstants.UNDERSCORE;
+
 @Data
 @Document("users")
 @Builder
@@ -37,6 +40,6 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(ROLE+UNDERSCORE+this.role));
     }
 }
