@@ -21,7 +21,7 @@ public class OrganizationController {
     @PostMapping("/")
     public ResponseEntity<Void> createOrganization(@RequestBody OrganizationRequestDTO organizationRequestDTO) {
         organizationService.createOrganization(organizationRequestDTO);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping("/users")
