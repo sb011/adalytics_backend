@@ -6,8 +6,6 @@ import com.adalytics.adalytics_backend.models.responseModels.UserResponseDTO;
 
 import java.util.List;
 
-import java.util.List;
-
 public interface IOrganizationService {
     void createOrganization(OrganizationRequestDTO organizationRequestDTO);
     List<UserResponseDTO> getOrganizationUsers();

@@ -1,6 +1,7 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
+import com.adalytics.adalytics_backend.enums.Platform;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.external.ApiService;
 import com.adalytics.adalytics_backend.models.entities.Connector;
@@ -15,14 +16,16 @@ import com.adalytics.adalytics_backend.utils.FieldValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -45,6 +48,16 @@ public class ConnectorServiceImpl implements IConnectorService {
     private String appId;
     @Value("${app-secret}")
     private String appSecret;
+    @Value("${google.client.id}")
+    private String clientId;
+    @Value("${google.client.secret}")
+    private String clientSecret;
+    @Value("${google.redirect.uri}")
+    private String redirectUri;
+    @Value("${google.scope}")
+    private String scope;
+    @Value("${google.token.server.utl}")
+    private String tokenUrl;
 
     @Override
     public void addConnector(ConnectorRequestDTO addRequest) throws Exception {
@@ -69,7 +82,11 @@ public class ConnectorServiceImpl implements IConnectorService {
         }
         if (nonNull(connector)) {
             connectorRepository.save(connector);
-            updateConnectorToken(connector);
+            if (addRequest.getPlatform().equals(Platform.FACEBOOK.getDisplayName())) {
+                updateConnectorToken(connector);
+            } else if (addRequest.getPlatform().equals(Platform.GOOGLE.getDisplayName())) {
+                exchangeAuthorizationCode(connector, addRequest.getAuthorizationCode());
+            }
         }
     }
 
@@ -88,6 +105,28 @@ public class ConnectorServiceImpl implements IConnectorService {
         connector.setToken(String.valueOf(jsonResponse.get("access_token")));
         connector.setExpirationTime(expiresAt);
         connectorRepository.save(connector);
+    }
+
+    @Async
+    public void exchangeAuthorizationCode(Connector connector, String authorizationCode) {
+        try {
+            GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    tokenUrl,
+                    clientId,
+                    clientSecret,
+                    authorizationCode,
+                    redirectUri
+            ).setScopes(Collections.singletonList(scope))
+                    .execute();
+
+            connector.setRefreshToken(tokenResponse.getRefreshToken());
+            connector.setToken(tokenResponse.getAccessToken());
+            connectorRepository.save(connector);
+        } catch (Exception e) {
+            throw new BadRequestException(e.getMessage(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
+        }
     }
 
     @Override
