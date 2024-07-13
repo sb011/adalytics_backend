@@ -123,6 +123,7 @@ public class ConnectorServiceImpl implements IConnectorService {
 
             connector.setRefreshToken(tokenResponse.getRefreshToken());
             connector.setToken(tokenResponse.getAccessToken());
+            connector.setExpirationTime(Long.MAX_VALUE);
             connectorRepository.save(connector);
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
