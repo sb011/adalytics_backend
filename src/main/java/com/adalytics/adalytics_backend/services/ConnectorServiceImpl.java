@@ -9,6 +9,7 @@ import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
+import com.adalytics.adalytics_backend.services.factoris.PlatformClientFactory;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
@@ -20,6 +21,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -40,6 +42,8 @@ public class ConnectorServiceImpl implements IConnectorService {
     private IUserRepository userRepository;
     @Autowired
     private ConnectorTransformer connectorTransformer;
+    @Autowired
+    private PlatformClientFactory platformClientFactory;
     @Autowired
     private ApiService apiService;
     @Value("${graph.api.version}")
@@ -102,7 +106,7 @@ public class ConnectorServiceImpl implements IConnectorService {
             throw new BadRequestException(errorNode.get("message").asText(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
         }
         long expiresAt = System.currentTimeMillis() + (jsonResponse.get("expires_in").longValue() * 1000);
-        connector.setToken(String.valueOf(jsonResponse.get("access_token")));
+        connector.setToken(jsonResponse.get("access_token").toString());
         connector.setExpirationTime(expiresAt);
         connectorRepository.save(connector);
     }
@@ -142,6 +146,16 @@ public class ConnectorServiceImpl implements IConnectorService {
         String orgId = ContextUtil.getCurrentOrgId();
         String connectorId = connectorRepository.deleteByIdAndOrganizationId(id, orgId);
         FieldValidator.validateConnectorId(connectorId);
+    }
+
+    @Override
+    public void refreshAccessToken(String id) {
+        String orgId = ContextUtil.getCurrentOrgId();
+        Connector connector = connectorRepository.findByIdAndOrganizationId(id,orgId).orElseThrow(() -> new BadRequestException("Connector Not Found", ErrorCodes.Connector_Not_Found.getErrorCode()));
+        if(!EnumUtils.isValidEnum(Platform.class, connector.getPlatform())) {
+            throw new BadRequestException("Invalid Platform", ErrorCodes.Platform_Invalid.getErrorCode());
+        }
+        platformClientFactory.getPlatformClient(Platform.valueOf(connector.getPlatform())).refreshAccessToken(connector);
     }
 
     private void validateRequest(ConnectorRequestDTO connectorRequestDTO) {

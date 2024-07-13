@@ -9,4 +9,5 @@ public interface IConnectorService {
     void addConnector(ConnectorRequestDTO addRequest) throws Exception;
     List<ConnectorResponseDTO> fetchAllConnectors();
     void removeConnector(String id);
+    void refreshAccessToken(String id);
 }

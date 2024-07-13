@@ -36,4 +36,10 @@ public class ConnectorController {
         connectorService.removeConnector(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PutMapping("/refresh/{id}")
+    public ResponseEntity<Void> refreshAccessToken(@PathVariable("id") String id) {
+        connectorService.refreshAccessToken(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

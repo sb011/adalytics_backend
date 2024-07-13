@@ -25,12 +25,15 @@ public class Connector {
      */
     private String platform;
     private String platformUserId;
-    private String refreshToken;
     private String token;
     private String email;
     private Long expirationTime;
+    private Long accessTokenExpirationTime;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    //Google specific Fields
+    private String refreshToken;
 }
