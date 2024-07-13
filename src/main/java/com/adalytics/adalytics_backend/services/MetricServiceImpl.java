@@ -10,7 +10,8 @@ import com.adalytics.adalytics_backend.models.requestModels.MetricRequestDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IGroupRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IMetricRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IMetricService;
-import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
+import com.adalytics.adalytics_backend.transformers.MetricTransformer;
+import com.adalytics.adalytics_backend.utils.ContextUtil;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class MetricServiceImpl implements IMetricService {
     @Autowired
     private IGroupRepository groupRepository;
     @Autowired
-    private ConnectorTransformer connectorTransformer;
+    private MetricTransformer metricTransformer;
 
     @Override
     public void createMetric(MetricRequestDTO metricRequestDTO) {
@@ -42,7 +43,8 @@ public class MetricServiceImpl implements IMetricService {
 
         Metric metric = null;
         if (isNull(metricRequestDTO.getId())) {
-            metric = connectorTransformer.convertToMetric(metricRequestDTO);
+            metric = metricTransformer.convertToMetric(metricRequestDTO);
+            metric.setOrganizationId(ContextUtil.getCurrentOrgId());
         } else {
             metric = metricRepository.findById(metricRequestDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Metric not found", ErrorCodes.Metric_Not_Found.getErrorCode()));
@@ -50,6 +52,7 @@ public class MetricServiceImpl implements IMetricService {
             metric.setMetricType(metricRequestDTO.getMetricType());
             metric.setVerticalAxisProperty(metricRequestDTO.getVerticalAxisProperty());
             metric.setGroupId(metricRequestDTO.getGroupId());
+            metric.setOrganizationId(metric.getOrganizationId());
         }
         metricRepository.save(metric);
     }

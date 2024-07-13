@@ -19,6 +19,7 @@ public class Metric {
     private String metricType;
     private String verticalAxisProperty;
     private String groupId;
+    private String organizationId;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
