@@ -25,6 +25,7 @@ public class Connector {
      */
     private String platform;
     private String platformUserId;
+    private String refreshToken;
     private String token;
     private String email;
     private Long expirationTime;

@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum Platform {
-    FACEBOOK("Facebook");
+    FACEBOOK("Facebook"),
+    GOOGLE("Google");
 
     private final String displayName;
 
