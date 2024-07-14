@@ -3,11 +3,13 @@ package com.adalytics.adalytics_backend.services.platformClientImpl;
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.enums.Platform;
 import com.adalytics.adalytics_backend.exceptions.BadGatewayException;
+import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IPlatformClient;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -16,6 +18,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -30,6 +33,10 @@ public class GoogleClientImpl implements IPlatformClient {
     private String clientSecret;
     @Value("${google.scope}")
     private String scope;
+    @Value("${google.redirect.uri}")
+    private String redirectUri;
+    @Value("${google.token.server.utl}")
+    private String tokenUrl;
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -75,5 +82,27 @@ public class GoogleClientImpl implements IPlatformClient {
             throw new BadGatewayException("Failed to refresh Access Token", ErrorCodes.Client_Not_Responding.getErrorCode());
         }
         log.info("===========================Done========================");
+    }
+
+    @Async
+    public void exchangeAuthorizationCode(Connector connector, String authorizationCode) {
+        try {
+            GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
+                    new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    tokenUrl,
+                    clientId,
+                    clientSecret,
+                    authorizationCode,
+                    redirectUri
+            ).setScopes(Collections.singletonList(scope))
+                    .execute();
+
+            connector.setRefreshToken(tokenResponse.getRefreshToken());
+            connector.setToken(tokenResponse.getAccessToken());
+            connectorRepository.save(connector);
+        } catch (Exception e) {
+            throw new BadRequestException(e.getMessage(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
+        }
     }
 }

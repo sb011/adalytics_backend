@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -37,6 +38,7 @@ public class FaceBookClientImpl implements IPlatformClient {
         return Platform.FACEBOOK;
     }
 
+    @Async
     @Override
     public void refreshAccessToken(Connector connector) {
         JsonNode jsonResponse = null;
