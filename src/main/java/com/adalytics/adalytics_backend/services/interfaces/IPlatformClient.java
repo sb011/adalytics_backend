@@ -6,4 +6,5 @@ import com.adalytics.adalytics_backend.models.entities.Connector;
 public interface IPlatformClient {
     Platform getPlatform();
     void refreshAccessToken(Connector connector);
+    Connector fetchUserInfo(Connector connector);
 }

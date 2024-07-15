@@ -105,4 +105,9 @@ public class GoogleClientImpl implements IPlatformClient {
             throw new BadRequestException(e.getMessage(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
         }
     }
+
+    @Override
+    public Connector fetchUserInfo(Connector connector) {
+        return null;
+    }
 }

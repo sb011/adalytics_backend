@@ -28,7 +28,9 @@ public class PlatformClientFactory {
                 log.error("Error initializing platform client factory", ex);
             }
         });
-        this.platformClientMap = map;
+        synchronized (this.getClass()) {
+            this.platformClientMap = map;
+        }
     }
 
     public IPlatformClient getPlatformClient(Platform platform) {

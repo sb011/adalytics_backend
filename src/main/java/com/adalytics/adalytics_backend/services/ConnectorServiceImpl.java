@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
 @Service
@@ -58,9 +57,6 @@ public class ConnectorServiceImpl implements IConnectorService {
             }
             connector = connectorTransformer.convertToConnector(addRequest);
             connector.setOrganizationId(ContextUtil.getCurrentOrgId());
-        }
-        if (nonNull(connector)) {
-            connectorRepository.save(connector);
         }
         return connector;
     }

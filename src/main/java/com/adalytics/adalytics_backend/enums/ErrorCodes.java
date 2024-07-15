@@ -20,16 +20,20 @@ public enum ErrorCodes {
 
     Platform_Token_Invalid(31),
     Platform_Invalid(32),
-    Connector_Not_Found(33),
-    Invalid_Request_Body(34),
-    Connector_Already_Present(35),
+    Platform_Error(33),
+
+    Connector_Not_Found(34),
+    Invalid_Request_Body(35),
+    Connector_Already_Present(36),
 
     Client_Not_Responding(41),
     Method_Not_Allowed(42),
 
     Organization_Name_Invalid(51),
 
-    Failed_To_Send_Email(61);
+    Failed_To_Send_Email(61),
+
+    Json_Processing_error(71);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {

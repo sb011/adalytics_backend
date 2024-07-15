@@ -28,7 +28,9 @@ public class ConnectorServiceFactory {
                 log.error("Error initializing connector service factory", ex);
             }
         });
-        this.connectorServiceMap = map;
+        synchronized (this.getClass()) {
+            this.connectorServiceMap = map;
+        }
     }
 
     public IConnectorService getConnectorService(Flow flow) {
