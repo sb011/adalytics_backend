@@ -15,4 +15,6 @@ public interface IMetricMapper {
     Metric convertToMetric(MetricRequestDTO metricRequestDTO);
 
     List<MetricResponseDTO> convertToMetricResponseDTOs(List<Metric> metricList);
+
+    MetricResponseDTO convertToMetricResponseDTO(Metric metric);
 }

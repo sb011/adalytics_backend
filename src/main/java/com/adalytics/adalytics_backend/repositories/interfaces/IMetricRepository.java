@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface IMetricRepository extends MongoRepository<Metric, String> {
+    List<Metric> findAllByOrganizationId(String organizationId);
     List<Metric> findAllByGroupId(String groupId);
 }

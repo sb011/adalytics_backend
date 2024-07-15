@@ -7,6 +7,7 @@ import com.adalytics.adalytics_backend.exceptions.NotFoundException;
 import com.adalytics.adalytics_backend.models.entities.Group;
 import com.adalytics.adalytics_backend.models.entities.Metric;
 import com.adalytics.adalytics_backend.models.requestModels.MetricRequestDTO;
+import com.adalytics.adalytics_backend.models.responseModels.MetricResponseDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IGroupRepository;
 import com.adalytics.adalytics_backend.repositories.interfaces.IMetricRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IMetricService;
@@ -55,6 +56,20 @@ public class MetricServiceImpl implements IMetricService {
             metric.setOrganizationId(metric.getOrganizationId());
         }
         metricRepository.save(metric);
+    }
+
+    @Override
+    public void deleteMetric(String metricId) {
+        Metric metric = metricRepository.findById(metricId)
+                .orElseThrow(() -> new NotFoundException("Metric not found", ErrorCodes.Metric_Not_Found.getErrorCode()));
+        metricRepository.delete(metric);
+    }
+
+    @Override
+    public MetricResponseDTO getMetricById(String metricId) {
+        Metric metric = metricRepository.findById(metricId)
+                .orElseThrow(() -> new NotFoundException("Metric not found", ErrorCodes.Metric_Not_Found.getErrorCode()));
+        return metricTransformer.convertToMetricResponseDTO(metric);
     }
 
     private void validateCreateMetricRequest(MetricRequestDTO metricRequestDTO) {

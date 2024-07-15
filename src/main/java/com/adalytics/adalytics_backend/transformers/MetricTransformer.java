@@ -20,4 +20,8 @@ public class MetricTransformer {
     public List<MetricResponseDTO> convertToMetricResponseDTOs(List<Metric> metricList) {
         return metricMapper.convertToMetricResponseDTOs(metricList);
     }
+
+    public MetricResponseDTO convertToMetricResponseDTO(Metric metric) {
+        return metricMapper.convertToMetricResponseDTO(metric);
+    }
 }

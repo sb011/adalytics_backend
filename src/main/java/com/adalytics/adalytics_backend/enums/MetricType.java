@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum MetricType {
-    LINE("line");
+    LINE("line"),
+    BAR("bar");
 
     private final String displayName;
 
