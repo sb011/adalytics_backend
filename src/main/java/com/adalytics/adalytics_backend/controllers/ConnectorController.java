@@ -40,11 +40,4 @@ public class ConnectorController {
         connectorService.removeConnector(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
-    @PutMapping("/refresh/{id}")
-    public ResponseEntity<Void> refreshAccessToken(@RequestParam(value = "platform", required = false, defaultValue = "") String platform, @PathVariable("id") String id) {
-        IConnectorService connectorService = connectorServiceInvoker.invoke(platform);
-        connectorService.refreshAccessToken(id);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 }

@@ -8,9 +8,11 @@ import com.adalytics.adalytics_backend.services.ConnectorServiceImpl;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.services.platformClientImpl.FaceBookClientImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static java.util.Objects.isNull;
 
+@Component
 public class FaceBookConnectorServiceImpl extends ConnectorServiceImpl implements IConnectorService {
 
     @Autowired
@@ -29,9 +31,9 @@ public class FaceBookConnectorServiceImpl extends ConnectorServiceImpl implement
         if(isNull(connector)) {
             return null;
         }
-        faceBookClient.fetchUserInfo(connector);
+        faceBookClient.populateUserInfo(connector);
         connectorRepository.save(connector);
-        faceBookClient.refreshAccessToken(connector);
+        faceBookClient.getLongLiveAccessToken(connector);
         return connector;
     }
 }

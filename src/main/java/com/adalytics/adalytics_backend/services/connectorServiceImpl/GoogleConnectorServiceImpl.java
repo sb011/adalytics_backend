@@ -8,9 +8,11 @@ import com.adalytics.adalytics_backend.services.ConnectorServiceImpl;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.services.platformClientImpl.GoogleClientImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static java.util.Objects.isNull;
 
+@Component
 public class GoogleConnectorServiceImpl extends ConnectorServiceImpl implements IConnectorService {
 
     @Autowired
@@ -28,6 +30,7 @@ public class GoogleConnectorServiceImpl extends ConnectorServiceImpl implements 
         if(isNull(connector)) {
             return null;
         }
+        googleClient.populateUserInfo(connector);
         connectorRepository.save(connector);
         googleClient.exchangeAuthorizationCode(connector, addRequest.getAuthorizationCode());
         return connector;

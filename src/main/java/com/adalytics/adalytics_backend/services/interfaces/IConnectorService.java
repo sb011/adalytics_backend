@@ -12,5 +12,4 @@ public interface IConnectorService {
     Connector addConnector(ConnectorRequestDTO addRequest);
     List<ConnectorResponseDTO> fetchAllConnectors();
     void removeConnector(String id);
-    void refreshAccessToken(String id);
 }

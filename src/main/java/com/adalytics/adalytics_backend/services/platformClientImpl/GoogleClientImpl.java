@@ -1,12 +1,13 @@
 package com.adalytics.adalytics_backend.services.platformClientImpl;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
-import com.adalytics.adalytics_backend.enums.Platform;
 import com.adalytics.adalytics_backend.exceptions.BadGatewayException;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
+import com.adalytics.adalytics_backend.external.ApiService;
 import com.adalytics.adalytics_backend.models.entities.Connector;
+import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUserInfoDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
-import com.adalytics.adalytics_backend.services.interfaces.IPlatformClient;
+import com.adalytics.adalytics_backend.utils.JsonUtil;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
@@ -23,9 +24,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
+import static java.util.Objects.nonNull;
+
 @Slf4j
 @Component
-public class GoogleClientImpl implements IPlatformClient {
+public class GoogleClientImpl{
 
     @Value("${google.client.id}")
     private String clientId;
@@ -38,18 +41,15 @@ public class GoogleClientImpl implements IPlatformClient {
     @Value("${google.token.server.utl}")
     private String tokenUrl;
 
+    @Autowired
+    private ApiService apiService;
+
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     @Autowired
     private IConnectorRepository connectorRepository;
 
-    @Override
-    public Platform getPlatform() {
-        return Platform.GOOGLE;
-    }
-
-    @Override
     public void refreshAccessToken(Connector connector){
         // Load client secrets
         GoogleClientSecrets clientSecrets = new GoogleClientSecrets().setInstalled(
@@ -106,8 +106,15 @@ public class GoogleClientImpl implements IPlatformClient {
         }
     }
 
-    @Override
-    public Connector fetchUserInfo(Connector connector) {
-        return null;
+    public Connector populateUserInfo(Connector connector) {
+        String url = String.format("https://www.googleapis.com/oauth2/v3/userinfo?access_token=%s",connector.getToken());
+        String response = apiService.callExternalApi(url, "GET", null, null);
+        GoogleUserInfoDTO googleUserInfoDTO = JsonUtil.getObjectFromJsonString(response, GoogleUserInfoDTO.class);
+        if (nonNull(googleUserInfoDTO.getError())) {
+            throw new BadRequestException(googleUserInfoDTO.getError().getMessage(), ErrorCodes.Platform_Invalid.getErrorCode());
+        }
+        connector.setPlatformUserId(googleUserInfoDTO.getSub());
+        connector.setEmail(googleUserInfoDTO.getEmail());
+        return connector;
     }
 }
