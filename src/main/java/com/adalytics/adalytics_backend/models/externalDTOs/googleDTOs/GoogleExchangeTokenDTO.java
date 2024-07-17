@@ -5,10 +5,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GoogleUserInfoDTO {
-    private String sub;
-    private String email;
-
-    //for error
-    private GoogleErrorDTO error;
+public class GoogleExchangeTokenDTO {
+    private String access_token;
+    private String refresh_token;
 }

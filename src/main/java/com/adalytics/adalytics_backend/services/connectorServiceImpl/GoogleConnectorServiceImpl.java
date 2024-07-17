@@ -30,9 +30,10 @@ public class GoogleConnectorServiceImpl extends ConnectorServiceImpl implements 
         if(isNull(connector)) {
             return null;
         }
+
+        googleClient.exchangeAuthorizationCode(connector, addRequest.getToken());
         googleClient.populateUserInfo(connector);
         connectorRepository.save(connector);
-        googleClient.exchangeAuthorizationCode(connector, addRequest.getAuthorizationCode());
         return connector;
     }
 }

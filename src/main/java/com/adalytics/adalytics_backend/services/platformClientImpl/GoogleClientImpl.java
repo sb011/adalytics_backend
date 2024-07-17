@@ -19,7 +19,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -84,7 +83,6 @@ public class GoogleClientImpl{
         log.info("===========================Done========================");
     }
 
-    @Async
     public void exchangeAuthorizationCode(Connector connector, String authorizationCode) {
         try {
             GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
