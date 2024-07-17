@@ -14,6 +14,7 @@ import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IAuthService;
 import com.adalytics.adalytics_backend.services.interfaces.IOrganizationService;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
+import com.adalytics.adalytics_backend.transformers.UserTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.EmailHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class OrganizationServiceImpl implements IOrganizationService {
     @Autowired
     private IAuthService authService;
     @Autowired
-    private ConnectorTransformer connectorTransformer;
+    private UserTransformer userTransformer;
     @Autowired
     private EmailHelper emailHelper;
 
@@ -68,7 +69,7 @@ public class OrganizationServiceImpl implements IOrganizationService {
         String orgId = ContextUtil.getCurrentOrgId();
         List<User> users = userRepository.findByOrganizationId(orgId);
 
-        return connectorTransformer.convertToUserResponseDTOs(users);
+        return userTransformer.convertToUserResponseDTOs(users);
     }
 
     @Override

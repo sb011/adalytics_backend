@@ -29,7 +29,13 @@ public enum ErrorCodes {
 
     Organization_Name_Invalid(51),
 
-    Failed_To_Send_Email(61);
+    Failed_To_Send_Email(61),
+
+    Invalid_Metric_Name(71),
+    Invalid_Metric_Type(72),
+    Invalid_Metric_YAxisProperty(73),
+    Group_Not_Found(74),
+    Metric_Not_Found(75);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {
