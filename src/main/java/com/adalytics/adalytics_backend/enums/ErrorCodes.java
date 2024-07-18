@@ -20,9 +20,11 @@ public enum ErrorCodes {
 
     Platform_Token_Invalid(31),
     Platform_Invalid(32),
-    Connector_Not_Found(33),
-    Invalid_Request_Body(34),
-    Connector_Already_Present(35),
+    Platform_Error(33),
+
+    Connector_Not_Found(34),
+    Invalid_Request_Body(35),
+    Connector_Already_Present(36),
 
     Client_Not_Responding(41),
     Method_Not_Allowed(42),
@@ -35,7 +37,9 @@ public enum ErrorCodes {
     Invalid_Metric_Type(72),
     Invalid_Metric_YAxisProperty(73),
     Group_Not_Found(74),
-    Metric_Not_Found(75);
+    Metric_Not_Found(75),
+
+    Json_Processing_error(81);
 
     private final int errorCode;
     ErrorCodes(int errorCode) {

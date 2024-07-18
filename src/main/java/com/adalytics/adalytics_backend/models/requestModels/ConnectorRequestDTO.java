@@ -12,7 +12,6 @@ public class ConnectorRequestDTO {
     private String email;
     private String platform;
     private String platformUserId;
-    private String authorizationCode;
     private String token;
     private Long expirationTime;
 }
