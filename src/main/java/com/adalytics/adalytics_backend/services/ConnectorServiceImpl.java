@@ -58,7 +58,7 @@ public class ConnectorServiceImpl implements IConnectorService {
     @Override
     public List<ConnectorResponseDTO> fetchAllConnectors() {
         String orgId = ContextUtil.getCurrentOrgId();
-        List<Connector> connectorList = connectorRepository.findByOrganizationId(orgId).orElse(new ArrayList<>());
+        List<Connector> connectorList = connectorRepository.findByOrganizationId(orgId);
         return connectorTransformer.convertToConnectorResponseDTOs(connectorList);
     }
 

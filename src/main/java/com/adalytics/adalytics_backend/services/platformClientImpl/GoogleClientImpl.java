@@ -9,6 +9,9 @@ import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUser
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
+import com.google.ads.googleads.lib.GoogleAdsClient;
+import com.google.ads.googleads.v17.services.GoogleAdsServiceClient;
+import com.google.ads.googleads.v17.services.SearchGoogleAdsRequest;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
@@ -17,6 +20,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.UserCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Slf4j
@@ -120,5 +126,34 @@ public class GoogleClientImpl{
             throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
         }
         return connector;
+    }
+
+    public void fetchCampaigns(Connector connector){
+        if(isNull(connector)) {
+            return;
+        }
+
+        UserCredentials userCredentials = UserCredentials.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setRefreshToken(connector.getRefreshToken())
+                .build();
+
+//        Long customerId = 105156177423765794362;
+        GoogleAdsClient googleAdsClient = GoogleAdsClient.newBuilder()
+                .setLoginCustomerId(3126015003L)
+                .setCredentials(userCredentials)
+                .setDeveloperToken("t78")
+                .build();
+
+        String query = "SELECT campaign.id, campaign.name, campaign.status FROM campaign ORDER BY campaign.id";
+        try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
+            SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
+                    .setCustomerId(connector.getPlatformUserId())
+                    .setQuery(query)
+                    .build();
+            GoogleAdsServiceClient.SearchPagedResponse response = googleAdsServiceClient.search(request);
+            log.info("response from google {}", response.toString());
+        }
     }
 }
