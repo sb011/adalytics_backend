@@ -40,6 +40,7 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.2.Final'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'com.google.api-client:google-api-client:2.6.0'
+	runtimeOnly 'com.google.api-ads:google-ads:32.0.0'
 }
 
 tasks.named('test') {
