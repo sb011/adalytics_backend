@@ -7,6 +7,7 @@ import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
+import com.adalytics.adalytics_backend.repositories.interfaces.IUserRepository;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
@@ -24,6 +25,8 @@ public class ConnectorServiceImpl implements IConnectorService {
 
     @Autowired
     private IConnectorRepository connectorRepository;
+    @Autowired
+    private IUserRepository userRepository;
     @Autowired
     private ConnectorTransformer connectorTransformer;
 
