@@ -7,6 +7,7 @@ import com.adalytics.adalytics_backend.external.ApiService;
 import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUserInfoDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
+import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
@@ -98,7 +100,7 @@ public class GoogleClientImpl{
 
             connector.setRefreshToken(tokenResponse.getRefreshToken());
             connector.setToken(tokenResponse.getAccessToken());
-            connectorRepository.save(connector);
+            connector.setExpirationTime(Long.MAX_VALUE);
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage(), ErrorCodes.Platform_Token_Invalid.getErrorCode());
         }
@@ -113,6 +115,10 @@ public class GoogleClientImpl{
         }
         connector.setPlatformUserId(googleUserInfoDTO.getSub());
         connector.setEmail(googleUserInfoDTO.getEmail());
+        Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserIdAndOrganizationId(connector.getPlatformUserId(), ContextUtil.getCurrentOrgId());
+        if (isExistingConnector.isPresent()) {
+            throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
+        }
         return connector;
     }
 }

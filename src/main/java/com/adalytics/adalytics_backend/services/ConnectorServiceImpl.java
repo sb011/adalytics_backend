@@ -49,10 +49,6 @@ public class ConnectorServiceImpl implements IConnectorService {
                 connector.setExpirationTime(addRequest.getExpirationTime());
             }
         } else {
-            Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserIdAndOrganizationId(addRequest.getPlatformUserId(), ContextUtil.getCurrentOrgId());
-            if (isExistingConnector.isPresent()) {
-                throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
-            }
             connector = connectorTransformer.convertToConnector(addRequest);
             connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }

@@ -7,12 +7,15 @@ import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.externalDTOs.facebookDTOs.FacebookLongLiveTokenDTO;
 import com.adalytics.adalytics_backend.models.externalDTOs.facebookDTOs.FacebookUserInfoDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
+import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
@@ -58,6 +61,10 @@ public class FaceBookClientImpl{
         }
         connector.setPlatformUserId(facebookUserInfoDTO.getId());
         connector.setEmail(facebookUserInfoDTO.getEmail());
+        Optional<Connector> isExistingConnector = connectorRepository.findByPlatformUserIdAndOrganizationId(connector.getPlatformUserId(), ContextUtil.getCurrentOrgId());
+        if (isExistingConnector.isPresent()) {
+            throw new BadRequestException("Connector is already present.", ErrorCodes.Connector_Already_Present.getErrorCode());
+        }
         return connector;
     }
 }
