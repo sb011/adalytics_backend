@@ -9,9 +9,9 @@ import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUser
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
+import com.amazonaws.util.json.Jackson;
 import com.google.ads.googleads.lib.GoogleAdsClient;
-import com.google.ads.googleads.v17.services.GoogleAdsServiceClient;
-import com.google.ads.googleads.v17.services.SearchGoogleAdsRequest;
+import com.google.ads.googleads.v17.services.*;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
@@ -19,16 +19,17 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.Credentials;
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.UserCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -47,6 +48,8 @@ public class GoogleClientImpl{
     private String redirectUri;
     @Value("${google.token.server.utl}")
     private String tokenUrl;
+    @Value("${google.developer.token}")
+    private String developerToken;
 
     @Autowired
     private ApiService apiService;
@@ -132,28 +135,47 @@ public class GoogleClientImpl{
         if(isNull(connector)) {
             return;
         }
+        System.out.println(connector);
+        List<String> scopes = new ArrayList<>() {
+            {
+                add("https://www.googleapis.com/auth/adwords");
+                add("openid");
+                add("https://www.googleapis.com/auth/userinfo.profile");
+                add("https://www.googleapis.com/auth/userinfo.email");
+                add("https://adwords.google.com/api/adwords");
+                add("https://adwords.google.com/api/adwords/");
+                add("https://adwords.google.com/api/adwords/cm");
+            }
+        };
+
+        AccessToken accessToken = new AccessToken(connector.getToken(), new Date(Long.MAX_VALUE));
 
         UserCredentials userCredentials = UserCredentials.newBuilder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .setRefreshToken(connector.getRefreshToken())
+                .setAccessToken(accessToken)
                 .build();
 
-//        Long customerId = 105156177423765794362;
         GoogleAdsClient googleAdsClient = GoogleAdsClient.newBuilder()
-                .setLoginCustomerId(3126015003L)
                 .setCredentials(userCredentials)
-                .setDeveloperToken("t78")
+                .setDeveloperToken("")
+                .setLoginCustomerId(9806311911L)
                 .build();
+
+        System.out.println(googleAdsClient.toString());
 
         String query = "SELECT campaign.id, campaign.name, campaign.status FROM campaign ORDER BY campaign.id";
         try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
             SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
-                    .setCustomerId(connector.getPlatformUserId())
+                    .setCustomerId(Long.toString(7660538272L))
                     .setQuery(query)
                     .build();
             GoogleAdsServiceClient.SearchPagedResponse response = googleAdsServiceClient.search(request);
-            log.info("response from google {}", response.toString());
+
+            for (GoogleAdsRow row : response.iterateAll()) {
+                System.out.printf(row.toString());
+            }
         }
     }
 }
