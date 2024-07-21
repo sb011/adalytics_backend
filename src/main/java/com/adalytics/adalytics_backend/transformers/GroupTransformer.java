@@ -16,4 +16,8 @@ public class GroupTransformer {
     public List<GroupResponseDTO> convertToGroupResponseDTOs(List<Group> groupList) {
         return groupMapper.convertToGroupResponseDTOs(groupList);
     }
+
+    public GroupResponseDTO convertToGroupResponseDTO(Group group) {
+        return groupMapper.convertToGroupResponseDTO(group);
+    }
 }

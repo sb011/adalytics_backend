@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.micrometer.common.util.StringUtils.isBlank;
+import static io.micrometer.common.util.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
@@ -26,25 +27,10 @@ public class NotificationHandler extends TextWebSocketHandler {
     @Autowired
     private JWTUtil jwtUtil;
 
-    private String getUserIdFromSession(WebSocketSession session) {
-        String query = session.getUri().getQuery();
-        if (query != null) {
-            for (String param : query.split("&")) {
-                String[] keyValue = param.split("=");
-                if (keyValue.length == 2 && "token".equals(keyValue[0])) {
-                    DecodedJWT validatedToken = jwtUtil.validateToken(keyValue[1]);
-                    System.out.println("Validated token: " + validatedToken.getSubject());
-                    return validatedToken.getSubject();
-                }
-            }
-        }
-        return null;
-    }
-
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = getUserIdFromSession(session);
-        if (userId != null) {
+        if (isNotBlank(userId)) {
             sessions.put(userId, session);
         } else {
             log.warn("User ID not found in WebSocket session");
@@ -56,7 +42,7 @@ public class NotificationHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         // Remove the session
         String userId = getUserIdFromSession(session);
-        if (userId != null) {
+        if (isNotBlank(userId)) {
             sessions.remove(userId);
         } else {
             log.warn("User ID not found in WebSocket session");
@@ -71,7 +57,6 @@ public class NotificationHandler extends TextWebSocketHandler {
         if(isBlank(eventType) || isBlank(message)) {
             return;
         }
-        // Assume the payload contains the type of notification and the message
         try {
             WebSocketSession webSocketSession = sessions.get(ContextUtil.getCurrentUserId());
             System.out.println(webSocketSession);
@@ -82,10 +67,23 @@ public class NotificationHandler extends TextWebSocketHandler {
                 );
                 String jsonNotification = objectMapper.writeValueAsString(notification);
                 webSocketSession.sendMessage(new TextMessage(jsonNotification));
-                System.out.println("Notification sent");
             }
         } catch (Exception ex) {
             log.error("Error sending pusher notification : ", ex);
         }
+    }
+
+    private String getUserIdFromSession(WebSocketSession session) {
+        String query = CommonUtil.resolve(() -> session.getUri().getQuery(), null);
+        if (isNotBlank(query)) {
+            for (String param : query.split("&")) {
+                String[] keyValue = param.split("=");
+                if (keyValue.length == 2 && "token".equals(keyValue[0])) {
+                    DecodedJWT validatedToken = jwtUtil.validateToken(keyValue[1]);
+                    return validatedToken.getSubject();
+                }
+            }
+        }
+        return null;
     }
 }

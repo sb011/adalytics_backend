@@ -20,8 +20,6 @@ public class GoogleConnectorServiceImpl extends ConnectorServiceImpl implements 
     private GoogleClientImpl googleClient;
     @Autowired
     private IConnectorRepository connectorRepository;
-    @Autowired
-    private NotificationHandler notificationHelper;
 
     @Override
     public Flow getFlow() {
@@ -37,7 +35,6 @@ public class GoogleConnectorServiceImpl extends ConnectorServiceImpl implements 
         googleClient.exchangeAuthorizationCode(connector, addRequest.getToken());
         googleClient.populateUserInfo(connector);
         connectorRepository.save(connector);
-        notificationHelper.sendPusherNotification("DATA_UPDATED", "message");
         return connector;
     }
 }
