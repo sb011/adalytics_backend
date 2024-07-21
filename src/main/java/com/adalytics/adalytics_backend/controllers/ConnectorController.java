@@ -1,9 +1,11 @@
 package com.adalytics.adalytics_backend.controllers;
 
+import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.services.invokers.ConnectorServiceInvoker;
+import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +21,15 @@ public class ConnectorController {
 
     @Autowired
     private ConnectorServiceInvoker connectorServiceInvoker;
+    @Autowired
+    private ConnectorTransformer connectorTransformer;
 
     @PostMapping("/")
-    public ResponseEntity<Void> addConnector(@RequestParam(value = "platform", required = false, defaultValue = "") String platform,@RequestBody ConnectorRequestDTO connectorRequestDTO) throws Exception {
+    public ResponseEntity<ConnectorResponseDTO> addConnector(@RequestParam(value = "platform", required = false, defaultValue = "") String platform,@RequestBody ConnectorRequestDTO connectorRequestDTO) throws Exception {
         IConnectorService connectorService = connectorServiceInvoker.invoke(platform);
-        connectorService.addConnector(connectorRequestDTO);
-        return new ResponseEntity<>(HttpStatus.OK);
+        Connector connector = connectorService.addConnector(connectorRequestDTO);
+        ConnectorResponseDTO connectorResponseDTO = connectorTransformer.convertToConnectorResponseDTO(connector);
+        return new ResponseEntity<>(connectorResponseDTO, HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")

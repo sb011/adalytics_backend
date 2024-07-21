@@ -12,4 +12,5 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IGroupMapper {
     List<GroupResponseDTO> convertToGroupResponseDTOs(List<Group> groupList);
+    GroupResponseDTO convertToGroupResponseDTO(Group group);
 }

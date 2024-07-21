@@ -7,6 +7,7 @@ import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorReposit
 import com.adalytics.adalytics_backend.services.ConnectorServiceImpl;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
 import com.adalytics.adalytics_backend.services.platformClientImpl.GoogleClientImpl;
+import com.adalytics.adalytics_backend.utils.NotificationHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

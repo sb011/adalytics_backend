@@ -6,7 +6,7 @@ import com.adalytics.adalytics_backend.models.responseModels.GroupResponseDTO;
 import java.util.List;
 
 public interface IGroupService {
-    void createGroup(GroupRequestDTO groupRequestDTO);
+    GroupResponseDTO createGroup(GroupRequestDTO groupRequestDTO);
     List<GroupResponseDTO> getGroups();
     void deleteGroup(String groupId);
 }

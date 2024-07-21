@@ -17,9 +17,9 @@ public class GroupController {
     private IGroupService groupService;
 
     @PostMapping("/")
-    public ResponseEntity<Void> createGroup(@RequestBody GroupRequestDTO groupRequestDTO) {
-        groupService.createGroup(groupRequestDTO);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<GroupResponseDTO> createGroup(@RequestBody GroupRequestDTO groupRequestDTO) {
+        GroupResponseDTO groupResponseDTO = groupService.createGroup(groupRequestDTO);
+        return new ResponseEntity<>(groupResponseDTO, HttpStatus.OK);
     }
 
     @GetMapping("/")
