@@ -187,6 +187,24 @@ public class GoogleClientImpl{
         }
         for (GoogleAdsRow row : response.iterateAll()) {
             System.out.printf(row.toString());
+            getAdGroup(googleAdsClient, customerId);
+        }
+    }
+
+    private void getAdGroup(GoogleAdsClient googleAdsClient, Long customerId) {
+        String query = "SELECT ad_group.id FROM ad_group ORDER BY ad_group.id";
+        GoogleAdsServiceClient.SearchPagedResponse response = null;
+        try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
+            SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
+                    .setCustomerId(customerId.toString())
+                    .setQuery(query)
+                    .build();
+            response = googleAdsServiceClient.search(request);
+        } catch (Exception e) {
+            // ignore
+        }
+        for (GoogleAdsRow row : response.iterateAll()) {
+            System.out.printf(row.toString());
         }
     }
 
