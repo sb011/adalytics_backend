@@ -9,8 +9,9 @@ import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUser
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
-import com.amazonaws.util.json.Jackson;
 import com.google.ads.googleads.lib.GoogleAdsClient;
+import com.google.ads.googleads.v17.errors.GoogleAdsException;
+import com.google.ads.googleads.v17.resources.CustomerClient;
 import com.google.ads.googleads.v17.services.*;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -19,10 +20,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.UserCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,34 +146,107 @@ public class GoogleClientImpl{
             }
         };
 
-        AccessToken accessToken = new AccessToken(connector.getToken(), new Date(Long.MAX_VALUE));
-
         UserCredentials userCredentials = UserCredentials.newBuilder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .setRefreshToken(connector.getRefreshToken())
-                .setAccessToken(accessToken)
                 .build();
 
         GoogleAdsClient googleAdsClient = GoogleAdsClient.newBuilder()
                 .setCredentials(userCredentials)
-                .setDeveloperToken("")
-                .setLoginCustomerId(9806311911L)
+                .setDeveloperToken(developerToken)
                 .build();
 
-        System.out.println(googleAdsClient.toString());
+        try (CustomerServiceClient customerServiceClient = googleAdsClient.getLatestVersion().createCustomerServiceClient()) {
+            ListAccessibleCustomersRequest request = ListAccessibleCustomersRequest.newBuilder().build();
+            ListAccessibleCustomersResponse response = customerServiceClient.listAccessibleCustomers(request);
+            for (String customer : response.getResourceNamesList()) {
+                String[] parts = customer.split("/");
+                GoogleAdsClient googleAdsClient1 = googleAdsClient.toBuilder().setLoginCustomerId(Long.parseLong(parts[1])).build();
+                List<Long> customerIds = createCustomerClientIdsList(Long.parseLong(parts[1]), googleAdsClient1);
+                for (Long customerId : customerIds) {
+                    getCampaign(googleAdsClient1, customerId);
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+    }
 
-        String query = "SELECT campaign.id, campaign.name, campaign.status FROM campaign ORDER BY campaign.id";
+    private void getCampaign(GoogleAdsClient googleAdsClient, Long customerId) {
+        String query = "SELECT campaign.id FROM campaign ORDER BY campaign.id";
+        GoogleAdsServiceClient.SearchPagedResponse response = null;
         try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
             SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
-                    .setCustomerId(Long.toString(7660538272L))
+                    .setCustomerId(customerId.toString())
                     .setQuery(query)
                     .build();
-            GoogleAdsServiceClient.SearchPagedResponse response = googleAdsServiceClient.search(request);
+            response = googleAdsServiceClient.search(request);
+        } catch (Exception e) {
+            // ignore
+        }
+        for (GoogleAdsRow row : response.iterateAll()) {
+            System.out.printf(row.toString());
+        }
+    }
 
-            for (GoogleAdsRow row : response.iterateAll()) {
-                System.out.printf(row.toString());
+    private List<Long> createCustomerClientIdsList(Long loginCustomerId, GoogleAdsClient googleAdsClient) {
+        Queue<Long> managerAccountsToSearch = new LinkedList<>();
+        List<Long> customerIdsList = new ArrayList<>();
+
+        try (GoogleAdsServiceClient googleAdsServiceClient =
+                     googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
+
+            String query =
+                    "SELECT customer_client.client_customer, customer_client.level, "
+                            + "customer_client.manager, customer_client.descriptive_name, "
+                            + "customer_client.currency_code, customer_client.time_zone, "
+                            + "customer_client.id "
+                            + "FROM customer_client "
+                            + "WHERE customer_client.level <= 1";
+
+            managerAccountsToSearch.add(loginCustomerId);
+
+            while (!managerAccountsToSearch.isEmpty()) {
+                long customerIdToSearchFrom = managerAccountsToSearch.poll();
+                GoogleAdsServiceClient.SearchPagedResponse response;
+                try {
+                    // Issues a search request.
+                    response =
+                            googleAdsServiceClient.search(
+                                    SearchGoogleAdsRequest.newBuilder()
+                                            .setQuery(query)
+                                            .setCustomerId(Long.toString(customerIdToSearchFrom))
+                                            .build());
+
+                    // Iterates over all rows in all pages to get all customer clients under the specified
+                    // customer's hierarchy.
+                    for (GoogleAdsRow googleAdsRow : response.iterateAll()) {
+                        CustomerClient customerClient = googleAdsRow.getCustomerClient();
+                        long clientId = customerClient.getId();
+
+                        // Adds the customer ID to the list.
+                        if (!customerIdsList.contains(clientId)) {
+                            customerIdsList.add(clientId);
+                        }
+
+                        // Checks if the child account is a manager itself so that it can later be processed
+                        // and added to the list if it hasn't been already.
+                        if (customerClient.getManager() && customerClient.getLevel() == 1) {
+                            if (!managerAccountsToSearch.contains(clientId)) {
+                                managerAccountsToSearch.add(clientId);
+                            }
+                        }
+                    }
+                } catch (GoogleAdsException gae) {
+                    System.out.printf(
+                            "Unable to retrieve hierarchy for customer ID %d: %s%n",
+                            customerIdToSearchFrom, gae.getGoogleAdsFailure().getErrors(0).getMessage());
+                    return null;
+                }
             }
+
+            return customerIdsList;
         }
     }
 }
