@@ -4,11 +4,13 @@ import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.exceptions.BadGatewayException;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
 import com.adalytics.adalytics_backend.external.ApiService;
+import com.adalytics.adalytics_backend.models.entities.Campaign;
 import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.externalDTOs.googleDTOs.GoogleUserInfoDTO;
 import com.adalytics.adalytics_backend.repositories.interfaces.IConnectorRepository;
 import com.adalytics.adalytics_backend.utils.ContextUtil;
 import com.adalytics.adalytics_backend.utils.JsonUtil;
+import com.adalytics.adalytics_backend.utils.QueryHelper;
 import com.google.ads.googleads.lib.GoogleAdsClient;
 import com.google.ads.googleads.v17.errors.GoogleAdsException;
 import com.google.ads.googleads.v17.resources.CustomerClient;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static java.util.Objects.isNull;
@@ -57,6 +60,8 @@ public class GoogleClientImpl{
 
     @Autowired
     private IConnectorRepository connectorRepository;
+    @Autowired
+    private QueryHelper queryHelper;
 
     public void refreshAccessToken(Connector connector){
         // Load client secrets
@@ -129,9 +134,10 @@ public class GoogleClientImpl{
         return connector;
     }
 
-    public void fetchCampaigns(Connector connector){
+    public List<Campaign> fetchCampaigns(Connector connector){
+        List<Campaign> campaignList = new ArrayList<>();
         if(isNull(connector)) {
-            return;
+            return new ArrayList<>();
         }
         System.out.println(connector);
         List<String> scopes = new ArrayList<>() {
@@ -165,16 +171,18 @@ public class GoogleClientImpl{
                 GoogleAdsClient googleAdsClient1 = googleAdsClient.toBuilder().setLoginCustomerId(Long.parseLong(parts[1])).build();
                 List<Long> customerIds = createCustomerClientIdsList(Long.parseLong(parts[1]), googleAdsClient1);
                 for (Long customerId : customerIds) {
-                    getCampaign(googleAdsClient1, customerId);
+                    campaignList.addAll(getCampaigns(googleAdsClient1, customerId));
                 }
             }
         } catch (Exception e) {
             // ignore
         }
+        return campaignList;
     }
 
-    private void getCampaign(GoogleAdsClient googleAdsClient, Long customerId) {
-        String query = "SELECT campaign.id FROM campaign ORDER BY campaign.id";
+    private List<Campaign> getCampaigns(GoogleAdsClient googleAdsClient, Long customerId) {
+        List<Campaign> campaignList = new ArrayList<>();
+        String query = queryHelper.getQuery("get_campaign");
         GoogleAdsServiceClient.SearchPagedResponse response = null;
         try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
             SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
@@ -182,17 +190,43 @@ public class GoogleClientImpl{
                     .setQuery(query)
                     .build();
             response = googleAdsServiceClient.search(request);
-        } catch (Exception e) {
-            // ignore
+
+            response.iterateAll().forEach(row -> {
+                com.google.ads.googleads.v17.resources.Campaign googleCampaign = row.getCampaign();
+                com.google.ads.googleads.v17.common.Metrics googleMetrics = row.getMetrics();
+
+                Campaign campaign = new Campaign();
+                campaign.setId(String.valueOf(googleCampaign.getId()));
+                campaign.setName(googleCampaign.getName());
+                campaign.setStartDate(googleCampaign.getStartDate());
+                campaign.setEndDate(googleCampaign.getEndDate());
+
+                Campaign.Metric metric = new Campaign.Metric();
+                metric.setClicks(BigDecimal.valueOf(googleMetrics.getClicks()));
+                metric.setConversions(BigDecimal.valueOf(googleMetrics.getConversions()));
+                metric.setEngagements(BigDecimal.valueOf(googleMetrics.getEngagements()));
+                metric.setImpressions(BigDecimal.valueOf(googleMetrics.getImpressions()));
+                metric.setInteractions(BigDecimal.valueOf(googleMetrics.getInteractions()));
+                campaign.setMetric(metric);
+
+                campaignList.add(campaign);
+            });
+        } catch (Exception ex) {
+            log.info("Error while fetching campaign from google : ", ex);
         }
-        for (GoogleAdsRow row : response.iterateAll()) {
-            System.out.printf(row.toString());
-            getAdGroup(googleAdsClient, customerId);
-        }
+
+        //TODO In future will fetch data for AD_GROUPS
+//        for (GoogleAdsRow row : response.iterateAll()) {
+//            System.out.printf(row.toString());
+//            getAdGroup(googleAdsClient, customerId);
+//        }
+
+        return campaignList;
     }
 
     private void getAdGroup(GoogleAdsClient googleAdsClient, Long customerId) {
-        String query = "SELECT ad_group.id FROM ad_group ORDER BY ad_group.id";
+        String query = queryHelper.getQuery("get_adGroup");
+
         GoogleAdsServiceClient.SearchPagedResponse response = null;
         try (GoogleAdsServiceClient googleAdsServiceClient = googleAdsClient.getLatestVersion().createGoogleAdsServiceClient()) {
             SearchGoogleAdsRequest request = SearchGoogleAdsRequest.newBuilder()
