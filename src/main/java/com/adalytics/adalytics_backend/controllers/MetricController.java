@@ -15,9 +15,9 @@ public class MetricController {
     private IMetricService metricService;
 
     @PostMapping("/")
-    public ResponseEntity<Void> createMetric(@RequestBody MetricRequestDTO metricRequestDTO) {
-        metricService.createMetric(metricRequestDTO);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<MetricResponseDTO> createMetric(@RequestBody MetricRequestDTO metricRequestDTO) {
+        MetricResponseDTO MetricResponseDTO = metricService.createMetric(metricRequestDTO);
+        return new ResponseEntity<>(MetricResponseDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/{metricId}")

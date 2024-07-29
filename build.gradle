@@ -42,6 +42,7 @@ dependencies {
 	implementation 'com.google.api-client:google-api-client:2.6.0'
 	implementation 'com.google.api-ads:google-ads:32.0.0'
 	implementation 'com.amazonaws:aws-java-sdk-core:1.12.762'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {

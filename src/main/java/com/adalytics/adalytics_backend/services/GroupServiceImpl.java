@@ -33,7 +33,7 @@ public class GroupServiceImpl implements IGroupService {
     private MetricTransformer metricTransformer;
 
     @Override
-    public void createGroup(GroupRequestDTO groupRequestDTO) {
+    public GroupResponseDTO createGroup(GroupRequestDTO groupRequestDTO) {
         if (isNull(groupRequestDTO)) {
             throw new BadRequestException("Invalid Request", ErrorCodes.Invalid_Request_Body.getErrorCode());
         }
@@ -51,6 +51,7 @@ public class GroupServiceImpl implements IGroupService {
         }
 
         groupRepository.save(group);
+        return groupTransformer.convertToGroupResponseDTO(group);
     }
 
     public List<GroupResponseDTO> getGroups() {

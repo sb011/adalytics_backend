@@ -29,7 +29,7 @@ public class MetricServiceImpl implements IMetricService {
     private MetricTransformer metricTransformer;
 
     @Override
-    public void createMetric(MetricRequestDTO metricRequestDTO) {
+    public MetricResponseDTO createMetric(MetricRequestDTO metricRequestDTO) {
         System.out.println(metricRequestDTO);
         if (isNull(metricRequestDTO)) {
             throw new BadRequestException("Invalid Request", ErrorCodes.Invalid_Request_Body.getErrorCode());
@@ -56,6 +56,7 @@ public class MetricServiceImpl implements IMetricService {
             metric.setOrganizationId(metric.getOrganizationId());
         }
         metricRepository.save(metric);
+        return metricTransformer.convertToMetricResponseDTO(metric);
     }
 
     @Override
