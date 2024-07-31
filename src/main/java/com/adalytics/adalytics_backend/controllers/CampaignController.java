@@ -1,13 +1,12 @@
 package com.adalytics.adalytics_backend.controllers;
 
 import com.adalytics.adalytics_backend.models.entities.Campaign;
+import com.adalytics.adalytics_backend.models.requestModels.CampaignRangeDTO;
 import com.adalytics.adalytics_backend.services.interfaces.ICampaignService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,8 +17,8 @@ public class CampaignController {
     @Autowired
     private ICampaignService campaignService;
 
-    @GetMapping
-    public ResponseEntity<List<Campaign>> getAllCampaigns(){
-        return new ResponseEntity<>(campaignService.getAllCampaigns(), HttpStatus.OK);
+    @PostMapping
+    public ResponseEntity<List<Campaign>> getAllCampaigns(@RequestBody(required = false) CampaignRangeDTO campaignRangeDTO){
+        return new ResponseEntity<>(campaignService.getAllCampaigns(campaignRangeDTO), HttpStatus.OK);
     }
 }
