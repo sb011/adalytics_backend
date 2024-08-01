@@ -40,6 +40,8 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.2.Final'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'com.google.api-client:google-api-client:2.6.0'
+	implementation 'com.google.api-ads:google-ads:32.0.0'
+	implementation 'com.amazonaws:aws-java-sdk-core:1.12.762'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 

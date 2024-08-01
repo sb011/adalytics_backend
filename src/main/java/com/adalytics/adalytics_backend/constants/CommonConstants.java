@@ -13,6 +13,7 @@ public class CommonConstants {
     public static final String ROLE = "ROLE";
     public static final String UNDERSCORE = "_";
     public static final String EMPTY_STRING = "";
+    public static long oneWeekInMillis = 7 * 24 * 60 * 60 * 1000L;
 
     public static final Map<String, Flow> platformToFlowMap = new HashMap<String, Flow>() {{
         put(EMPTY_STRING, Flow.DEFAULT);
