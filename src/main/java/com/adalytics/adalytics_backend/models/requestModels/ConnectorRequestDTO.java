@@ -6,9 +6,6 @@ import lombok.Data;
 @Data
 public class ConnectorRequestDTO {
     private String id;
-    /**
-     * {@link Platform}
-     */
     private String email;
     private String platform;
     private String platformUserId;

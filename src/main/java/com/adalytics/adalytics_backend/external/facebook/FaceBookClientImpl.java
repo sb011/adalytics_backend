@@ -1,4 +1,4 @@
-package com.adalytics.adalytics_backend.services.platformClientImpl;
+package com.adalytics.adalytics_backend.external.facebook;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
@@ -49,7 +49,6 @@ public class FaceBookClientImpl{
         connector.setToken(facebookLongLiveTokenDTO.getAccess_token());
         connector.setExpirationTime(expiresAt);
         connectorRepository.save(connector);
-        log.info("===========================Done========================");
     }
 
     public Connector populateUserInfo(Connector connector) {

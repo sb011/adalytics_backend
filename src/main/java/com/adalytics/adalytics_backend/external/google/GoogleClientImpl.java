@@ -1,4 +1,4 @@
-package com.adalytics.adalytics_backend.services.platformClientImpl;
+package com.adalytics.adalytics_backend.external.google;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
 import com.adalytics.adalytics_backend.exceptions.BadGatewayException;

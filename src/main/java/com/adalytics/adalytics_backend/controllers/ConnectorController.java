@@ -4,7 +4,6 @@ import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
 import com.adalytics.adalytics_backend.services.interfaces.IConnectorService;
-import com.adalytics.adalytics_backend.services.invokers.ConnectorServiceInvoker;
 import com.adalytics.adalytics_backend.transformers.ConnectorTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,13 +19,13 @@ import java.util.List;
 public class ConnectorController {
 
     @Autowired
-    private ConnectorServiceInvoker connectorServiceInvoker;
+    private IConnectorService connectorService;
+
     @Autowired
     private ConnectorTransformer connectorTransformer;
 
     @PostMapping("/")
     public ResponseEntity<ConnectorResponseDTO> addConnector(@RequestParam(value = "platform", required = false, defaultValue = "") String platform,@RequestBody ConnectorRequestDTO connectorRequestDTO) throws Exception {
-        IConnectorService connectorService = connectorServiceInvoker.invoke(platform);
         Connector connector = connectorService.addConnector(connectorRequestDTO);
         ConnectorResponseDTO connectorResponseDTO = connectorTransformer.convertToConnectorResponseDTO(connector);
         return new ResponseEntity<>(connectorResponseDTO, HttpStatus.OK);
@@ -35,13 +34,11 @@ public class ConnectorController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/")
     public ResponseEntity<List<ConnectorResponseDTO>> getAllConnectors(@RequestParam(value = "platform", required = false, defaultValue = "") String platform) {
-        IConnectorService connectorService = connectorServiceInvoker.invoke(platform);
         return new ResponseEntity<>(connectorService.fetchAllConnectors(), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeConnector(@RequestParam(value = "platform", required = false, defaultValue = "") String platform, @PathVariable("id") String id) {
-        IConnectorService connectorService = connectorServiceInvoker.invoke(platform);
         connectorService.removeConnector(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }

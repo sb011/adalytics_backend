@@ -1,8 +1,10 @@
 package com.adalytics.adalytics_backend.services;
 
 import com.adalytics.adalytics_backend.enums.ErrorCodes;
-import com.adalytics.adalytics_backend.enums.Flow;
+import com.adalytics.adalytics_backend.enums.Platform;
 import com.adalytics.adalytics_backend.exceptions.BadRequestException;
+import com.adalytics.adalytics_backend.external.facebook.FaceBookClientImpl;
+import com.adalytics.adalytics_backend.external.google.GoogleClientImpl;
 import com.adalytics.adalytics_backend.models.entities.Connector;
 import com.adalytics.adalytics_backend.models.requestModels.ConnectorRequestDTO;
 import com.adalytics.adalytics_backend.models.responseModels.ConnectorResponseDTO;
@@ -29,18 +31,18 @@ public class ConnectorServiceImpl implements IConnectorService {
     private IUserRepository userRepository;
     @Autowired
     private ConnectorTransformer connectorTransformer;
-
-    @Override
-    public Flow getFlow() {
-        return Flow.DEFAULT;
-    }
+    @Autowired
+    private GoogleClientImpl googleClient;
+    @Autowired
+    private FaceBookClientImpl facebookClient;
 
     @Override
     public Connector addConnector(ConnectorRequestDTO addRequest) {
         if (isNull(addRequest))
             throw new BadRequestException("Invalid Request", ErrorCodes.Invalid_Request_Body.getErrorCode());
         validateRequest(addRequest);
-        Connector connector = null;
+        Connector connector = Connector.builder().build();
+
         if (isNotBlank(addRequest.getId())) {
             Optional<Connector> existingConnector = connectorRepository.findById(addRequest.getId());
             if (existingConnector.isPresent()) {
@@ -52,6 +54,25 @@ public class ConnectorServiceImpl implements IConnectorService {
             connector = connectorTransformer.convertToConnector(addRequest);
             connector.setOrganizationId(ContextUtil.getCurrentOrgId());
         }
+
+        Platform platform = Platform.valueOf(addRequest.getPlatform());
+        switch (platform) {
+            case FACEBOOK -> {
+                facebookClient.getLongLiveAccessToken(connector);
+                facebookClient.populateUserInfo(connector);
+                break;
+            }
+            case GOOGLE -> {
+                googleClient.exchangeAuthorizationCode(connector, addRequest.getToken());
+                googleClient.populateUserInfo(connector);
+                break;
+            }
+            default -> {
+                break;
+            }
+        }
+
+        connectorRepository.save(connector);
         return connector;
     }
 
